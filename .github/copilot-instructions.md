@@ -1,154 +1,154 @@
-# Copilot Instructions for DiagramFlow
+# DiagramFlow の Copilot インストラクション
 
-## Project Overview
+## プロジェクト概要
 
-DiagramFlow is a WPF-based diagram editor desktop application that allows users to create, view, and manipulate diagrams on a scrollable canvas. The application focuses on canvas operations including zoom and pan functionality, shape manipulation, and undo/redo capabilities.
+DiagramFlow は、スクロール可能なキャンバス上に図形を配置し、ダイアグラム図を作成・閲覧・操作できる WPF ベースのデスクトップアプリケーションです。本アプリケーションは、ズーム・パン機能を含むキャンバス操作、図形操作、Undo/Redo 機能に重点を置いています。
 
-## Technical Stack
+## 技術スタック
 
-- **Framework**: .NET Framework 4.7.2
-- **Language**: C# 7.3
-- **UI Technology**: WPF (Windows Presentation Foundation)
-- **Target OS**: Windows 10/11
-- **Required Libraries**:
-  - Fody.PropertyChanged: For automatic property change notification in ViewModels
-  - ReactiveProperty: For reactive property and command definitions
+- **フレームワーク**: .NET Framework 4.7.2
+- **言語**: C# 7.3
+- **UI 技術**: WPF (Windows Presentation Foundation)
+- **対象 OS**: Windows 10/11
+- **必須ライブラリ**:
+  - Fody.PropertyChanged: ViewModel のプロパティ変更通知自動化のため
+  - ReactiveProperty: リアクティブなプロパティ・コマンド定義のため
 
-## Project Structure
+## プロジェクト構成
 
 ```
 DiagramFlow/
-├── DiagramFlow/          # Main application project
-│   ├── App.xaml          # Application definition
-│   ├── MainWindow.xaml   # Main window UI
-│   ├── MainWindow.xaml.cs # Main window code-behind
-│   ├── ViewModels/       # ViewModel classes
-│   └── Properties/       # Assembly info and resources
-├── Documents/            # Project documentation (in Japanese)
+├── DiagramFlow/          # メインアプリケーションプロジェクト
+│   ├── App.xaml          # アプリケーション定義
+│   ├── MainWindow.xaml   # メインウィンドウ UI
+│   ├── MainWindow.xaml.cs # メインウィンドウコードビハインド
+│   ├── ViewModels/       # ViewModel クラス
+│   └── Properties/       # アセンブリ情報とリソース
+├── Documents/            # プロジェクトドキュメント（日本語）
 │   ├── RequirementsDefinition.md
 │   ├── DiagramEditorSpecification.md
 │   └── ImplementationPlan.md
-└── DiagramFlow.slnx      # Solution file
+└── DiagramFlow.slnx      # ソリューションファイル
 ```
 
-## Build and Test
+## ビルドとテスト
 
-### Building the Project
+### プロジェクトのビルド
 ```bash
-# Build with MSBuild (from Visual Studio Developer Command Prompt)
+# MSBuild でビルド（Visual Studio Developer Command Prompt から）
 msbuild DiagramFlow.slnx /p:Configuration=Release
 ```
 
-### Testing
-- Currently, there is no automated test infrastructure in place
-- Manual testing should focus on:
-  - Canvas zoom operations (Ctrl + MouseWheel)
-  - Pan operations (right-click + drag)
-  - Double-click zoom functionality
-  - Zoom slider synchronization
+### テスト
+- 現在、自動テストインフラストラクチャは構築されていません
+- 手動テストは以下に重点を置いてください：
+  - キャンバスズーム操作（Ctrl + マウスホイール）
+  - パン操作（右クリック + ドラッグ）
+  - ダブルクリックズーム機能
+  - ズームスライダーの同期
 
-## Coding Conventions
+## コーディング規約
 
-### General Guidelines
+### 一般的なガイドライン
 
-1. **MVVM Pattern**: Follow the Model-View-ViewModel pattern strictly
-   - Views are defined in XAML files
-   - ViewModels handle business logic and UI state
-   - Use data binding to connect Views and ViewModels
+1. **MVVM パターン**: Model-View-ViewModel パターンを厳密に遵守してください
+   - View は XAML ファイルで定義します
+   - ViewModel はビジネスロジックと UI 状態を処理します
+   - データバインディングを使用して View と ViewModel を接続します
 
-2. **Property Change Notifications**: Use Fody.PropertyChanged for automatic INotifyPropertyChanged implementation
-   - ViewModels should be decorated with appropriate attributes
-   - Avoid manual property change notifications unless necessary
+2. **プロパティ変更通知**: Fody.PropertyChanged を使用して INotifyPropertyChanged を自動実装します
+   - ViewModel は適切な属性で装飾する必要があります
+   - 必要な場合を除き、手動でプロパティ変更通知を行わないでください
 
-3. **Reactive Properties**: Use ReactiveProperty for properties and commands
-   - Example: `public ReactiveProperty<double> ZoomScale { get; }`
+3. **リアクティブプロパティ**: ReactiveProperty をプロパティとコマンドに使用します
+   - 例: `public ReactiveProperty<double> ZoomScale { get; }`
 
-4. **Event Handling**:
-   - Prefer code-behind for direct UI event handlers (e.g., mouse events)
-   - Use Commands for user actions that involve business logic
-   - Always check for null references when accessing ViewModels
+4. **イベント処理**:
+   - 直接的な UI イベントハンドラー（マウスイベントなど）にはコードビハインドを優先します
+   - ビジネスロジックを含むユーザーアクションには Command を使用します
+   - ViewModel にアクセスする際は常に null 参照をチェックしてください
 
-5. **Naming Conventions**:
-   - PascalCase for class names, methods, and properties
-   - Private fields: prefix with underscore + camelCase (e.g., `_isPanning`, `_lastMousePosition`)
-   - Meaningful names that describe purpose
+5. **命名規則**:
+   - クラス名、メソッド、プロパティには PascalCase を使用します
+   - プライベートフィールド: アンダースコア + camelCase（例: `_isPanning`, `_lastMousePosition`）
+   - 目的を説明する意味のある名前を使用します
 
-### WPF-Specific Conventions
+### WPF 固有の規約
 
-1. **Layout**: Use `ScrollViewer` with `Canvas` for diagram editor
-2. **Transformations**: Use `ScaleTransform` for zoom operations
-3. **Mouse Operations**:
-   - Left-click: Shape selection and movement
-   - Right-click + drag: Pan operation
-   - Ctrl + MouseWheel: Zoom in/out
-   - Double-click: Toggle zoom
-4. **Update UI after transformations**: Call `UpdateLayout()` when needed after scale changes
+1. **レイアウト**: ダイアグラムエディターには `ScrollViewer` と `Canvas` を使用します
+2. **変換**: ズーム操作には `ScaleTransform` を使用します
+3. **マウス操作**:
+   - 左クリック: 図形の選択と移動
+   - 右クリック + ドラッグ: パン操作
+   - Ctrl + マウスホイール: ズームイン/アウト
+   - ダブルクリック: ズームの切り替え
+4. **変換後の UI 更新**: スケール変更後に必要に応じて `UpdateLayout()` を呼び出します
 
-### Code Style
+### コードスタイル
 
-- Use explicit types instead of `var` for clarity
-- Add XML documentation comments for public methods and properties
-- Keep methods focused and small (single responsibility)
-- Handle edge cases (e.g., clamp zoom values between 0.1 and 4.0)
+- 明確性のため `var` の代わりに明示的な型を使用してください
+- public メソッドとプロパティには XML ドキュメントコメントを追加してください
+- メソッドは焦点を絞り、小さく保ってください（単一責任）
+- エッジケースを処理してください（例: ズーム値を 0.1 から 4.0 の間にクランプ）
 
-## Important Constraints
+## 重要な制約事項
 
-1. **Do NOT use**:
-   - .NET Core or .NET 6+ (must use .NET Framework 4.7.2)
-   - External UI control libraries (DevExpress, Infragistics, etc.)
-   - Standard features should use WPF built-in controls only
+1. **使用禁止**:
+   - .NET Core または .NET 6+（.NET Framework 4.7.2 を使用する必要があります）
+   - 外部 UI コントロールライブラリ（DevExpress、Infragistics など）
+   - 標準機能は WPF 組み込みコントロールのみを使用してください
 
-2. **Must use**:
-   - Fody.PropertyChanged for property change notifications
-   - ReactiveProperty for reactive properties and commands
+2. **必須使用**:
+   - プロパティ変更通知には Fody.PropertyChanged
+   - リアクティブプロパティとコマンドには ReactiveProperty
 
-## Common Tasks
+## 一般的なタスク
 
-### Adding a New ViewModel
-1. Create class in `ViewModels` folder
-2. Use Fody.PropertyChanged attributes for automatic notifications
-3. Define properties using ReactiveProperty
-4. Connect to View via DataContext binding
+### 新しい ViewModel の追加
+1. `ViewModels` フォルダーにクラスを作成します
+2. 自動通知のために Fody.PropertyChanged 属性を使用します
+3. ReactiveProperty を使用してプロパティを定義します
+4. DataContext バインディングを介して View に接続します
 
-### Modifying Zoom/Pan Behavior
-1. Check the requirements in `Documents/RequirementsDefinition.md`
-2. Update `MainWindow.xaml.cs` code-behind for event handlers
-3. Update ViewModel properties if needed
-4. Test with mouse wheel and slider synchronization
+### ズーム/パン動作の変更
+1. `Documents/RequirementsDefinition.md` の要件を確認します
+2. イベントハンドラーのために `MainWindow.xaml.cs` コードビハインドを更新します
+3. 必要に応じて ViewModel プロパティを更新します
+4. マウスホイールとスライダーの同期でテストします
 
-### Adding New Shapes
-1. Define shape classes in appropriate folder
-2. Update Canvas rendering logic
-3. Implement selection and manipulation logic
-4. Consider undo/redo impact
+### 新しい図形の追加
+1. 適切なフォルダーに図形クラスを定義します
+2. Canvas レンダリングロジックを更新します
+3. 選択と操作ロジックを実装します
+4. Undo/Redo への影響を考慮します
 
-## Performance Considerations
+## パフォーマンスに関する考慮事項
 
-- Zoom and pan operations must be responsive without UI freezing
-- Handle high-frequency mouse wheel events efficiently
-- Use `UpdateLayout()` judiciously to avoid performance issues
+- ズームとパン操作は UI のフリーズなく応答性を保つ必要があります
+- 高頻度なマウスホイールイベントを効率的に処理してください
+- パフォーマンス問題を避けるため `UpdateLayout()` は慎重に使用してください
 
-## Future Enhancements (Out of Current Scope)
+## 将来の拡張機能（現在のスコープ外）
 
-- Shape selection and multi-selection
-- Undo/Redo functionality
-- Save/Load diagram data
-- Touch input support
-- Connection lines between shapes
-- Minimap display
+- 図形の選択・複数選択
+- Undo/Redo 機能
+- 図形データの保存・読み込み
+- タッチ操作対応
+- 図形間の接続線
+- ミニマップ表示
 
-## Language Note
+## ドキュメント言語について
 
-Most documentation in the `Documents/` folder is written in Japanese. The core requirements specify:
-- Canvas zoom capabilities (最小: 10%, 最大: 400% / minimum: 10%, maximum: 400%)
-- Pan with right-click drag
-- Double-click zoom with animation
-- Zoom slider synchronization
+`Documents/` フォルダー内のほとんどのドキュメントは日本語で記述されています。主な要件は以下の通りです：
+- キャンバスズーム機能（最小: 10%, 最大: 400%）
+- 右クリックドラッグによるパン
+- アニメーション付きダブルクリックズーム
+- ズームスライダーの同期
 
-## Getting Started for New Contributors
+## 新しい貢献者向けスタートガイド
 
-1. Ensure you have Visual Studio with WPF workload installed
-2. Open `DiagramFlow.slnx` in Visual Studio
-3. Restore NuGet packages (Fody.PropertyChanged, ReactiveProperty)
-4. Build and run the application
-5. Review documentation in `Documents/` folder for detailed requirements
+1. WPF ワークロードがインストールされた Visual Studio を用意してください
+2. Visual Studio で `DiagramFlow.slnx` を開いてください
+3. NuGet パッケージ（Fody.PropertyChanged、ReactiveProperty）を復元してください
+4. アプリケーションをビルドして実行してください
+5. 詳細な要件については `Documents/` フォルダー内のドキュメントを確認してください
