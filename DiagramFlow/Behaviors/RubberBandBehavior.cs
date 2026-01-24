@@ -82,9 +82,10 @@ namespace DiagramFlow.Behaviors
                 AssociatedObject.CaptureMouse();
                 e.Handled = true;
             }
-            catch
+            catch (Exception)
             {
-                // If an exception occurs, ensure we clean up properly
+                // Catch all exceptions to ensure mouse capture is always released.
+                // This prevents the mouse from being left in a captured state.
                 CleanupSelection();
                 throw;
             }
@@ -107,9 +108,10 @@ namespace DiagramFlow.Behaviors
                 SelectionRectangle.Width = width;
                 SelectionRectangle.Height = height;
             }
-            catch
+            catch (Exception)
             {
-                // If an exception occurs during mouse move, clean up and stop selecting
+                // Catch all exceptions to ensure mouse capture is always released.
+                // This prevents the mouse from being left in a captured state.
                 CleanupSelection();
                 throw;
             }
