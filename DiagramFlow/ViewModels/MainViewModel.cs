@@ -56,7 +56,7 @@ namespace DiagramFlow.ViewModels
 
         public MainViewModel()
         {
-            AddNodeCommand = new RelayCommand(_ => AddNode());
+            AddNodeCommand = new RelayCommand(param => AddNode(param));
             DeleteSelectedCommand = new RelayCommand(_ => DeleteSelected());
             UndoCommand = new RelayCommand(_ => UndoService.Undo(), _ => UndoService.CanUndo);
             RedoCommand = new RelayCommand(_ => UndoService.Redo(), _ => UndoService.CanRedo);
@@ -88,13 +88,20 @@ namespace DiagramFlow.ViewModels
             });
         }
 
-        private void AddNode()
+        private void AddNode(object parameter)
         {
+            Models.ShapeType shapeType = Models.ShapeType.Rectangle;
+            if (parameter is string typeStr && Enum.TryParse(typeStr, out Models.ShapeType parsed))
+            {
+                shapeType = parsed;
+            }
+
             var node = new NodeViewModel
             {
                 X = 100 + (Nodes.Count * 20),
                 Y = 100 + (Nodes.Count * 20),
-                Text = $"Node {Nodes.Count + 1}"
+                Text = $"Node {Nodes.Count + 1}",
+                ShapeType = shapeType
             };
             // Use UndoService
             UndoService.Execute(new AddNodeCommand(this, node));

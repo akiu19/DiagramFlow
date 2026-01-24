@@ -311,7 +311,8 @@ namespace DiagramFlow
                     Width = node.Width,
                     Height = node.Height,
                     Text = node.Text,
-                    Color = (node.Background as SolidColorBrush)?.Color.ToString() ?? "LightBlue"
+                    Color = (node.Background as SolidColorBrush)?.Color.ToString() ?? "LightBlue",
+                    ShapeType = node.ShapeType
                 });
             }
 
@@ -348,7 +349,8 @@ namespace DiagramFlow
                     Y = nodeDto.Y,
                     Width = nodeDto.Width,
                     Height = nodeDto.Height,
-                    Text = nodeDto.Text
+                    Text = nodeDto.Text,
+                    ShapeType = nodeDto.ShapeType
                 };
 
                 if (!string.IsNullOrEmpty(nodeDto.Color))

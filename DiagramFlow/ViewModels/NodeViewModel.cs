@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Media;
+using DiagramFlow.Models;
 
 namespace DiagramFlow.ViewModels
 {
@@ -68,6 +69,13 @@ namespace DiagramFlow.ViewModels
         {
             get => _background;
             set => SetProperty(ref _background, value);
+        }
+
+        private ShapeType _shapeType = ShapeType.Rectangle;
+        public ShapeType ShapeType
+        {
+            get => _shapeType;
+            set => SetProperty(ref _shapeType, value);
         }
 
         // State
