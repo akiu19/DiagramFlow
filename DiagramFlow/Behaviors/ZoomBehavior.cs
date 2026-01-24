@@ -10,6 +10,9 @@ namespace DiagramFlow.Behaviors
 {
     public class ZoomBehavior : Behavior<FrameworkElement>
     {
+        private AnimationClock _animationClock;
+        private EventHandler _animationTickHandler;
+        
         public static readonly DependencyProperty ZoomScaleProperty =
             DependencyProperty.Register("ZoomScale", typeof(double), typeof(ZoomBehavior),
                 new FrameworkPropertyMetadata(1.0, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
@@ -43,11 +46,34 @@ namespace DiagramFlow.Behaviors
         protected override void OnDetaching()
         {
             base.OnDetaching();
+            
+            // Stop any ongoing animation to prevent null reference exceptions
+            StopAnimation();
+            
             if (ScrollViewer != null)
             {
                 ScrollViewer.PreviewMouseWheel -= ScrollViewer_PreviewMouseWheel;
             }
             AssociatedObject.PreviewMouseLeftButtonDown -= OnMouseLeftButtonDown;
+        }
+        
+        private void StopAnimation()
+        {
+            if (_animationClock != null)
+            {
+                if (_animationTickHandler != null)
+                {
+                    _animationClock.CurrentTimeInvalidated -= _animationTickHandler;
+                    _animationTickHandler = null;
+                }
+                
+                if (_animationClock.Controller != null)
+                {
+                    _animationClock.Controller.Stop();
+                }
+                
+                _animationClock = null;
+            }
         }
 
         private void ScrollViewer_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
@@ -118,6 +144,9 @@ namespace DiagramFlow.Behaviors
         {
             if (ScrollViewer == null) return;
 
+            // Stop any existing animation before starting a new one
+            StopAnimation();
+
             double startScale = ZoomScale;
             double startHorizontalOffset = ScrollViewer.HorizontalOffset;
             double startVerticalOffset = ScrollViewer.VerticalOffset;
@@ -147,29 +176,56 @@ namespace DiagramFlow.Behaviors
                     EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
                 };
 
-                var clock = animation.CreateClock();
-                clock.CurrentTimeInvalidated += (s, e) =>
+                _animationClock = animation.CreateClock();
+                
+                // Use local variables for closure to avoid issues with changing state
+                var localStartScale = startScale;
+                var localStartH = startHorizontalOffset;
+                var localStartV = startVerticalOffset;
+                var localTargetScale = targetScale;
+                var localTargetH = targetHorizontalOffset;
+                var localTargetV = targetVerticalOffset;
+                var localEasing = animation.EasingFunction;
+                
+                _animationTickHandler = (s, e) =>
                 {
-                    if (ScrollViewer == null) 
+                    // Verify ScrollViewer is still valid and animation clock exists
+                    if (ScrollViewer == null || _animationClock == null || _animationClock.Controller == null)
                     {
-                        clock.Controller.Stop();
+                        StopAnimation();
                         return;
                     }
                     
-                    double progress = clock.CurrentProgress ?? 0.0;
-                    IEasingFunction easing = animation.EasingFunction;
-                    double easedProgress = easing != null ? easing.Ease(progress) : progress;
+                    // Check if animation is still active
+                    if (_animationClock.CurrentState == ClockState.Stopped)
+                    {
+                        StopAnimation();
+                        return;
+                    }
+                    
+                    double progress = _animationClock.CurrentProgress ?? 0.0;
+                    double easedProgress = localEasing != null ? localEasing.Ease(progress) : progress;
 
-                    double currentScale = startScale + (targetScale - startScale) * easedProgress;
-                    double currentH = startHorizontalOffset + (targetHorizontalOffset - startHorizontalOffset) * easedProgress;
-                    double currentV = startVerticalOffset + (targetVerticalOffset - startVerticalOffset) * easedProgress;
+                    double currentScale = localStartScale + (localTargetScale - localStartScale) * easedProgress;
+                    double currentH = localStartH + (localTargetH - localStartH) * easedProgress;
+                    double currentV = localStartV + (localTargetV - localStartV) * easedProgress;
 
-                    ZoomScale = currentScale;
-                    ScrollViewer.UpdateLayout(); 
-                    ScrollViewer.ScrollToHorizontalOffset(currentH);
-                    ScrollViewer.ScrollToVerticalOffset(currentV);
+                    try
+                    {
+                        ZoomScale = currentScale;
+                        ScrollViewer.UpdateLayout(); 
+                        ScrollViewer.ScrollToHorizontalOffset(currentH);
+                        ScrollViewer.ScrollToVerticalOffset(currentV);
+                    }
+                    catch (Exception)
+                    {
+                        // If any operation fails (e.g., due to detachment), stop the animation
+                        StopAnimation();
+                    }
                 };
-                clock.Controller.Begin();
+                
+                _animationClock.CurrentTimeInvalidated += _animationTickHandler;
+                _animationClock.Controller.Begin();
             }
             else
             {
