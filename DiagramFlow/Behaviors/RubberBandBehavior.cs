@@ -126,7 +126,7 @@ namespace DiagramFlow.Behaviors
                         ProcessSelection();
                     }
 
-                    e.Handled = false; // Allow others? No, we handled the selection action.
+                    e.Handled = true;
                 }
                 finally
                 {
