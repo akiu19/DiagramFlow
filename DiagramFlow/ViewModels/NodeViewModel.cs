@@ -15,18 +15,25 @@ namespace DiagramFlow.ViewModels
         public double Y { get; set; }
 
         // Size
-        private double _width = 100;
-        public double Width
+        public double Width { get; set; } = 100;
+        public double Height { get; set; } = 80;
+
+        void OnWidthChanged(double oldValue, double newValue)
         {
-            get => _width;
-            set => _width = Math.Max(MinWidth, value);
+            // Enforce minimum width
+            if (newValue < MinWidth)
+            {
+                Width = MinWidth;
+            }
         }
 
-        private double _height = 80;
-        public double Height
+        void OnHeightChanged(double oldValue, double newValue)
         {
-            get => _height;
-            set => _height = Math.Max(MinHeight, value);
+            // Enforce minimum height
+            if (newValue < MinHeight)
+            {
+                Height = MinHeight;
+            }
         }
 
         // Content

@@ -18,11 +18,15 @@ namespace DiagramFlow.ViewModels
         public ObservableCollection<ConnectorViewModel> Connectors { get; } = new ObservableCollection<ConnectorViewModel>();
 
         // Zoom control (range: 0.1 to 4.0)
-        private double _zoomScale = 1.0;
-        public double ZoomScale
+        public double ZoomScale { get; set; } = 1.0;
+
+        void OnZoomScaleChanged(double oldValue, double newValue)
         {
-            get => _zoomScale;
-            set => _zoomScale = Math.Max(0.1, Math.Min(4.0, value));
+            // Clamp the value between 0.1 and 4.0
+            if (newValue < 0.1 || newValue > 4.0)
+            {
+                ZoomScale = Math.Max(0.1, Math.Min(4.0, newValue));
+            }
         }
 
         // Selected nodes
