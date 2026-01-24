@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace DiagramFlow.Services
 {
@@ -68,14 +69,22 @@ namespace DiagramFlow.Services
 
         private void TrimHistory()
         {
-            // Stack doesn't support removal easily unless we use LinkedList or re-stack.
-            // For simple implementation, we can let it grow or Re-create stack if too big.
-            // Efficient circular buffer is better but Stack is standard.
             if (_undoStack.Count > _maxHistory)
             {
-                // Simple hack: convert to array, skip last, recreate stack.
-                // Or just ignore limit for now or use LinkedList.
-                // For this requirements: simple limit.
+                // Convert stack to list, keep only the most recent _maxHistory items
+                var items = new List<IUndoableCommand>(_undoStack);
+                items.Reverse(); // Reverse to get chronological order (oldest first)
+                
+                // Keep only the most recent _maxHistory items
+                var trimmedItems = items.Skip(items.Count - _maxHistory).ToList();
+                
+                // Clear and rebuild the stack
+                _undoStack.Clear();
+                trimmedItems.Reverse(); // Reverse back to stack order (newest first)
+                foreach (var item in trimmedItems)
+                {
+                    _undoStack.Push(item);
+                }
             }
         }
     }

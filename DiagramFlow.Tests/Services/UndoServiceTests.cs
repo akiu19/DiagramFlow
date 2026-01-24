@@ -111,5 +111,28 @@ namespace DiagramFlow.Tests.Services
 
             Assert.True(eventRaised);
         }
+
+        [Fact]
+        public void TrimHistory_ShouldLimitUndoStackTo100Items()
+        {
+            var service = new UndoService();
+            
+            // Add 150 commands to exceed the 100 item limit
+            for (int i = 0; i < 150; i++)
+            {
+                var command = new TestCommand(() => { }, () => { });
+                service.Execute(command);
+            }
+
+            // After 150 commands, only the most recent 100 should remain
+            int undoCount = 0;
+            while (service.CanUndo)
+            {
+                service.Undo();
+                undoCount++;
+            }
+
+            Assert.Equal(100, undoCount);
+        }
     }
 }
