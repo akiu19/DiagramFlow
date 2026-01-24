@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Xunit;
 using DiagramFlow.Services;
 
@@ -133,6 +134,45 @@ namespace DiagramFlow.Tests.Services
             }
 
             Assert.Equal(100, undoCount);
+        }
+
+        [Fact]
+        public void TrimHistory_ShouldKeepMostRecentCommands()
+        {
+            var service = new UndoService();
+            var executedValues = new List<int>();
+            
+            // Add 105 commands with identifiable values
+            for (int i = 0; i < 105; i++)
+            {
+                int value = i;
+                var command = new TestCommand(
+                    () => executedValues.Add(value),
+                    () => executedValues.RemoveAt(executedValues.Count - 1)
+                );
+                service.Execute(command);
+            }
+
+            // Undo all commands - should only undo the most recent 100 (values 5-104)
+            var undoneValues = new List<int>();
+            while (service.CanUndo)
+            {
+                int countBefore = executedValues.Count;
+                service.Undo();
+                // The value that was removed is the last one that was added
+                if (executedValues.Count < countBefore)
+                {
+                    undoneValues.Add(executedValues.Count); // This gives us which command was undone
+                }
+            }
+
+            // Should have undone 100 commands
+            Assert.Equal(100, undoneValues.Count);
+            
+            // After all undos, should have the first 5 commands still executed
+            // (commands 0-4 were trimmed, so they stayed executed)
+            Assert.Equal(5, executedValues.Count);
+            Assert.Equal(new[] { 0, 1, 2, 3, 4 }, executedValues);
         }
     }
 }
