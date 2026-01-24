@@ -140,39 +140,38 @@ namespace DiagramFlow.Tests.Services
         public void TrimHistory_ShouldKeepMostRecentCommands()
         {
             var service = new UndoService();
-            var executedValues = new List<int>();
+            var executedCommands = new List<int>();
             
             // Add 105 commands with identifiable values
             for (int i = 0; i < 105; i++)
             {
                 int value = i;
                 var command = new TestCommand(
-                    () => executedValues.Add(value),
-                    () => executedValues.RemoveAt(executedValues.Count - 1)
+                    () => executedCommands.Add(value),
+                    () => executedCommands.RemoveAt(executedCommands.Count - 1)
                 );
                 service.Execute(command);
             }
 
-            // Undo all commands - should only undo the most recent 100 (values 5-104)
-            var undoneValues = new List<int>();
+            // At this point, all 105 commands have been executed
+            // But only the most recent 100 are in the undo stack (commands 5-104)
+            Assert.Equal(105, executedCommands.Count);
+
+            // Undo all available commands (should be 100: commands 5-104)
+            int undoCount = 0;
             while (service.CanUndo)
             {
-                int countBefore = executedValues.Count;
                 service.Undo();
-                // The value that was removed is the last one that was added
-                if (executedValues.Count < countBefore)
-                {
-                    undoneValues.Add(executedValues.Count); // This gives us which command was undone
-                }
+                undoCount++;
             }
 
-            // Should have undone 100 commands
-            Assert.Equal(100, undoneValues.Count);
+            // Should have undone exactly 100 commands
+            Assert.Equal(100, undoCount);
             
-            // After all undos, should have the first 5 commands still executed
-            // (commands 0-4 were trimmed, so they stayed executed)
-            Assert.Equal(5, executedValues.Count);
-            Assert.Equal(new[] { 0, 1, 2, 3, 4 }, executedValues);
+            // After all undos, the first 5 commands should remain executed
+            // (commands 0-4 were trimmed from the undo stack, so they can't be undone)
+            Assert.Equal(5, executedCommands.Count);
+            Assert.Equal(new[] { 0, 1, 2, 3, 4 }, executedCommands);
         }
     }
 }
