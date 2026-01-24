@@ -127,14 +127,14 @@ namespace DiagramFlow.Behaviors
                     {
                         ProcessSelection();
                     }
-
-                    e.Handled = true;
                 }
                 finally
                 {
                     // Always clean up, even if an exception occurs
                     CleanupSelection();
                 }
+                
+                e.Handled = true;
             }
         }
 
