@@ -1,17 +1,11 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Runtime.CompilerServices;
 
 namespace DiagramFlow.ViewModels
 {
     public class ConnectorViewModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
-
-        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
 
         public Guid Id { get; set; } = Guid.NewGuid();
 
@@ -22,40 +16,12 @@ namespace DiagramFlow.ViewModels
         public int TargetPort { get; set; }
 
         // Calculated line coordinates
-        private double _x1;
-        public double X1
-        {
-            get => _x1;
-            set { _x1 = value; OnPropertyChanged(); }
-        }
+        public double X1 { get; set; }
+        public double Y1 { get; set; }
+        public double X2 { get; set; }
+        public double Y2 { get; set; }
 
-        private double _y1;
-        public double Y1
-        {
-            get => _y1;
-            set { _y1 = value; OnPropertyChanged(); }
-        }
-
-        private double _x2;
-        public double X2
-        {
-            get => _x2;
-            set { _x2 = value; OnPropertyChanged(); }
-        }
-
-        private double _y2;
-        public double Y2
-        {
-            get => _y2;
-            set { _y2 = value; OnPropertyChanged(); }
-        }
-
-        private bool _isSelected;
-        public bool IsSelected
-        {
-            get => _isSelected;
-            set { _isSelected = value; OnPropertyChanged(); }
-        }
+        public bool IsSelected { get; set; }
 
         public ConnectorViewModel(NodeViewModel source, int sourcePort, NodeViewModel target, int targetPort)
         {
