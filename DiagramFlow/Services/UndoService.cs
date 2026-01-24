@@ -71,19 +71,17 @@ namespace DiagramFlow.Services
         {
             if (_undoStack.Count > _maxHistory)
             {
-                // Convert stack to list, keep only the most recent _maxHistory items
-                var items = new List<IUndoableCommand>(_undoStack);
-                items.Reverse(); // Reverse to get chronological order (oldest first)
+                // Convert to array to preserve order, then take only the most recent _maxHistory items
+                var items = _undoStack.ToArray();
                 
-                // Keep only the most recent _maxHistory items
-                var trimmedItems = items.Skip(items.Count - _maxHistory).ToList();
-                
-                // Clear and rebuild the stack
+                // Clear and rebuild the stack with only the most recent items
                 _undoStack.Clear();
-                trimmedItems.Reverse(); // Reverse back to stack order (newest first)
-                foreach (var item in trimmedItems)
+                
+                // Push items back in reverse order (from oldest of the kept items to newest)
+                // to maintain correct stack order
+                for (int i = _maxHistory - 1; i >= 0; i--)
                 {
-                    _undoStack.Push(item);
+                    _undoStack.Push(items[i]);
                 }
             }
         }
