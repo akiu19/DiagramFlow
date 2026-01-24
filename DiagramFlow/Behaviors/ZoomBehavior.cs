@@ -217,9 +217,14 @@ namespace DiagramFlow.Behaviors
                         ScrollViewer.ScrollToHorizontalOffset(currentH);
                         ScrollViewer.ScrollToVerticalOffset(currentV);
                     }
-                    catch (Exception)
+                    catch (InvalidOperationException)
                     {
-                        // If any operation fails (e.g., due to detachment), stop the animation
+                        // If ScrollViewer operations fail due to detachment, stop the animation
+                        StopAnimation();
+                    }
+                    catch (NullReferenceException)
+                    {
+                        // If any null reference occurs despite checks, stop the animation
                         StopAnimation();
                     }
                 };
