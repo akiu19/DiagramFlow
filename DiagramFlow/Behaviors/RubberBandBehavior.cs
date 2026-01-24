@@ -63,8 +63,8 @@ namespace DiagramFlow.Behaviors
             // Behavior doesn't know about global state easily. 
             // But usually MouseCapture prevents other events.
 
-            MainViewModel?.ClearSelection();
-
+            // Don't clear selection here - let ProcessSelection handle it based on modifier keys
+            
             _isSelecting = true;
             _startPoint = e.GetPosition(AssociatedObject);
 
