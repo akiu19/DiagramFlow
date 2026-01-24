@@ -70,7 +70,7 @@ msbuild DiagramFlow.slnx /p:Configuration=Release
 
 5. **Naming Conventions**:
    - PascalCase for class names, methods, and properties
-   - camelCase for private fields (prefix with underscore: `_fieldName`)
+   - Private fields: prefix with underscore + camelCase (e.g., `_isPanning`, `_lastMousePosition`)
    - Meaningful names that describe purpose
 
 ### WPF-Specific Conventions
@@ -140,7 +140,7 @@ msbuild DiagramFlow.slnx /p:Configuration=Release
 ## Language Note
 
 Most documentation in the `Documents/` folder is written in Japanese. The core requirements specify:
-- Canvas zoom capabilities (最小: 10%, 最大: 400%)
+- Canvas zoom capabilities (最小: 10%, 最大: 400% / minimum: 10%, maximum: 400%)
 - Pan with right-click drag
 - Double-click zoom with animation
 - Zoom slider synchronization
