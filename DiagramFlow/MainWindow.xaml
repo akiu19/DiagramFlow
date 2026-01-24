@@ -24,10 +24,10 @@
                         Width="{Binding Width}" 
                         Height="{Binding Height}"
                         BorderBrush="Black" BorderThickness="1"
-                        CornerRadius="3"
-                        MouseLeftButtonDown="Node_MouseLeftButtonDown"
-                        MouseLeftButtonUp="Node_MouseLeftButtonUp"
-                        MouseMove="Node_MouseMove">
+                        CornerRadius="3">
+                    <i:Interaction.Behaviors>
+                        <b:NodeInteractionBehavior MainViewModel="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}" />
+                    </i:Interaction.Behaviors>
                     <Grid>
                         <!-- Text display -->
                         <TextBlock x:Name="NodeText"
@@ -43,6 +43,7 @@
                                  VerticalAlignment="Center"
                                  MinWidth="50"
                                  Visibility="Collapsed"
+                                 GotFocus="NodeTextBox_GotFocus"
                                  LostFocus="NodeTextBox_LostFocus"
                                  KeyDown="NodeTextBox_KeyDown"/>
                     </Grid>
@@ -65,7 +66,6 @@
                              Width="10" Height="10"
                              Fill="Gray" Stroke="Black" StrokeThickness="1"
                              Canvas.Top="-5"
-                             MouseLeftButtonDown="Port_MouseLeftButtonDown"
                              Cursor="Cross"
                              Visibility="Collapsed"/>
                     <!-- Bottom port -->
@@ -73,7 +73,6 @@
                              Width="10" Height="10"
                              Fill="Gray" Stroke="Black" StrokeThickness="1"
                              Canvas.Top="{Binding Height}"
-                             MouseLeftButtonDown="Port_MouseLeftButtonDown"
                              Cursor="Cross"
                              Visibility="Collapsed"/>
                     <!-- Left port -->
@@ -81,7 +80,6 @@
                              Width="10" Height="10"
                              Fill="Gray" Stroke="Black" StrokeThickness="1"
                              Canvas.Left="-5"
-                             MouseLeftButtonDown="Port_MouseLeftButtonDown"
                              Cursor="Cross"
                              Visibility="Collapsed"/>
                     <!-- Right port -->
@@ -89,7 +87,6 @@
                              Width="10" Height="10"
                              Fill="Gray" Stroke="Black" StrokeThickness="1"
                              Canvas.Left="{Binding Width}"
-                             MouseLeftButtonDown="Port_MouseLeftButtonDown"
                              Cursor="Cross"
                              Visibility="Collapsed"/>
                 </Canvas>
@@ -196,10 +193,13 @@
                 <!-- Main Canvas -->
                 <Canvas x:Name="DiagramCanvas" 
                         Width="10000" Height="10000" 
-                        Background="White"
-                        MouseLeftButtonDown="Canvas_MouseLeftButtonDown"
-                        MouseLeftButtonUp="Canvas_MouseLeftButtonUp"
-                        MouseMove="Canvas_MouseMove">
+                        Background="White">
+                    <i:Interaction.Behaviors>
+                        <b:RubberBandBehavior MainViewModel="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}" 
+                                              SelectionRectangle="{Binding ElementName=SelectionRectangle}" />
+                        <b:ConnectionCreationBehavior MainViewModel="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}" 
+                                                      TempConnectionLine="{Binding ElementName=TempConnectionLine}" />
+                    </i:Interaction.Behaviors>
 
                     <!-- Connectors layer (behind nodes) -->
                     <ItemsControl ItemsSource="{Binding Connectors}"

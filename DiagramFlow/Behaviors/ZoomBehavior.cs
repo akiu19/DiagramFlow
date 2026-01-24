@@ -68,8 +68,40 @@ namespace DiagramFlow.Behaviors
         {
             if (e.ClickCount == 2)
             {
+                // Ignore if clicked on an item (Node or Connector)
+                if (e.OriginalSource is DependencyObject obj)
+                {
+                    if (IsItem(obj)) return;
+                }
+                
                 HandleDoubleClick(e);
             }
+        }
+
+        private bool IsItem(DependencyObject obj)
+        {
+            // Traverse up to find if we are in a Node or Connector
+            // Check DataContext
+            if (obj is FrameworkElement fe)
+            {
+                if (fe.DataContext != null && 
+                    (fe.DataContext.GetType().Name.Contains("NodeViewModel") || 
+                     fe.DataContext.GetType().Name.Contains("ConnectorViewModel")))
+                {
+                    return true;
+                }
+            }
+            
+            // Or simple check: if it is not the associated object or its direct background
+            // But AssociatedObject is the Grid container.
+            // Items are children.
+            // DataContext check is robust.
+            
+            var parent = VisualTreeHelper.GetParent(obj);
+            if (parent != null)
+                return IsItem(parent);
+                
+            return false;
         }
 
         private void HandleDoubleClick(MouseButtonEventArgs e)

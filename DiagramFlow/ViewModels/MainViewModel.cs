@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Windows;
 using System.Windows.Input;
+using DiagramFlow.Services;
 
 namespace DiagramFlow.ViewModels
 {
@@ -43,11 +46,27 @@ namespace DiagramFlow.ViewModels
         // Commands
         public ICommand AddNodeCommand { get; }
         public ICommand DeleteSelectedCommand { get; }
+        public ICommand UndoCommand { get; }
+        public ICommand RedoCommand { get; }
+        public ICommand CopyCommand { get; }
+        public ICommand PasteCommand { get; }
+
+        public UndoService UndoService { get; } = new UndoService();
+        public IClipboardService ClipboardService { get; set; } = new ClipboardService(new SystemClipboardWrapper());
 
         public MainViewModel()
         {
             AddNodeCommand = new RelayCommand(_ => AddNode());
             DeleteSelectedCommand = new RelayCommand(_ => DeleteSelected());
+            UndoCommand = new RelayCommand(_ => UndoService.Undo(), _ => UndoService.CanUndo);
+            RedoCommand = new RelayCommand(_ => UndoService.Redo(), _ => UndoService.CanRedo);
+            CopyCommand = new RelayCommand(_ => CopySelection());
+            PasteCommand = new RelayCommand(p => PasteFromClipboard(p));
+
+            UndoService.StateChanged += (s, e) =>
+            {
+                System.Windows.Input.CommandManager.InvalidateRequerySuggested();
+            };
 
             // Add sample nodes for testing
             Nodes.Add(new NodeViewModel
@@ -77,39 +96,28 @@ namespace DiagramFlow.ViewModels
                 Y = 100 + (Nodes.Count * 20),
                 Text = $"Node {Nodes.Count + 1}"
             };
-            Nodes.Add(node);
+            // Use UndoService
+            UndoService.Execute(new AddNodeCommand(this, node));
         }
 
         private void DeleteSelected()
         {
             var nodesToDelete = SelectedNodes.ToList();
+            var connectorsToDelete = new HashSet<ConnectorViewModel>(SelectedConnectors);
+
             foreach (var node in nodesToDelete)
             {
-                // Remove related connectors
                 var relatedConnectors = Connectors
-                    .Where(c => c.SourceNode == node || c.TargetNode == node)
-                    .ToList();
+                    .Where(c => c.SourceNode == node || c.TargetNode == node);
                 foreach (var conn in relatedConnectors)
                 {
-                    Connectors.Remove(conn);
-                    if (SelectedConnectors.Contains(conn))
-                    {
-                         SelectedConnectors.Remove(conn);
-                    }
+                    connectorsToDelete.Add(conn);
                 }
-
-                Nodes.Remove(node);
-                SelectedNodes.Remove(node);
             }
-            
-            var connectorsToDelete = SelectedConnectors.ToList();
-            foreach (var conn in connectorsToDelete)
+
+            if (nodesToDelete.Any() || connectorsToDelete.Any())
             {
-                if (Connectors.Contains(conn))
-                {
-                    Connectors.Remove(conn);
-                }
-                SelectedConnectors.Remove(conn);
+                UndoService.Execute(new DeleteItemsCommand(this, nodesToDelete, connectorsToDelete));
             }
         }
 
@@ -167,6 +175,35 @@ namespace DiagramFlow.ViewModels
             {
                 connector.IsSelected = true;
                 SelectedConnectors.Add(connector);
+            }
+        }
+
+        public void MoveSelectedNodes(double deltaX, double deltaY)
+        {
+            foreach (var node in SelectedNodes)
+            {
+                node.X += deltaX;
+                node.Y += deltaY;
+            }
+        }
+
+        private void CopySelection()
+        {
+            ClipboardService.Copy(SelectedNodes, Connectors);
+        }
+
+        private void PasteFromClipboard(object parameter)
+        {
+            Point position = new Point(100, 100);
+            if (parameter is Point p)
+            {
+                position = p;
+            }
+
+            var result = ClipboardService.Paste(position);
+            if (result.Nodes.Any())
+            {
+                UndoService.Execute(new AddItemsCommand(this, result.Nodes, result.Connectors));
             }
         }
     }

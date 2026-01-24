@@ -98,6 +98,30 @@ namespace DiagramFlow.Tests.ViewModels
         }
 
         [Fact]
+        public void AddNodeCommand_ShouldAddNodeAndSupportUndoRedo()
+        {
+            var vm = new MainViewModel();
+            int initialCount = vm.Nodes.Count;
+
+            // Execute Add
+            vm.AddNodeCommand.Execute(null);
+
+            Assert.Equal(initialCount + 1, vm.Nodes.Count);
+            Assert.True(vm.UndoService.CanUndo);
+
+            // Execute Undo
+            vm.UndoCommand.Execute(null);
+            
+            Assert.Equal(initialCount, vm.Nodes.Count);
+            Assert.True(vm.UndoService.CanRedo);
+
+            // Execute Redo
+            vm.RedoCommand.Execute(null);
+
+            Assert.Equal(initialCount + 1, vm.Nodes.Count);
+        }
+
+        [Fact]
         public void DeleteSelectedCommand_ShouldRemoveNodesAndConnectors()
         {
             var vm = new MainViewModel();
@@ -154,6 +178,32 @@ namespace DiagramFlow.Tests.ViewModels
             
             // Nodes should still exist
             Assert.Equal(2, vm.Nodes.Count);
+        }
+
+        [Fact]
+        public void DeleteSelectedCommand_ShouldSupportUndoRedo()
+        {
+            var vm = new MainViewModel();
+            vm.Nodes.Clear(); // Clear default nodes
+
+            var node1 = new NodeViewModel { Text = "N1" };
+            vm.Nodes.Add(node1);
+            
+            // Select and delete
+            vm.SelectNode(node1);
+            vm.DeleteSelectedCommand.Execute(null);
+
+            Assert.Empty(vm.Nodes);
+            Assert.True(vm.UndoService.CanUndo);
+
+            // Undo
+            vm.UndoCommand.Execute(null);
+            Assert.Single(vm.Nodes);
+            Assert.Contains(node1, vm.Nodes);
+
+            // Redo
+            vm.RedoCommand.Execute(null);
+            Assert.Empty(vm.Nodes);
         }
     }
 }
