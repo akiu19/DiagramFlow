@@ -222,11 +222,6 @@ namespace DiagramFlow.Behaviors
                         // If ScrollViewer operations fail due to detachment, stop the animation
                         StopAnimation();
                     }
-                    catch (NullReferenceException)
-                    {
-                        // If any null reference occurs despite checks, stop the animation
-                        StopAnimation();
-                    }
                 };
                 
                 _animationClock.CurrentTimeInvalidated += _animationTickHandler;
