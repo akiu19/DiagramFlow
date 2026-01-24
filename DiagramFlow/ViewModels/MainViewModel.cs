@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
 using DiagramFlow.Services;
@@ -14,11 +13,6 @@ namespace DiagramFlow.ViewModels
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
         // Node and Connector collections
         public ObservableCollection<NodeViewModel> Nodes { get; } = new ObservableCollection<NodeViewModel>();
         public ObservableCollection<ConnectorViewModel> Connectors { get; } = new ObservableCollection<ConnectorViewModel>();
@@ -28,14 +22,7 @@ namespace DiagramFlow.ViewModels
         public double ZoomScale
         {
             get => _zoomScale;
-            set
-            {
-                if (Math.Abs(_zoomScale - value) > 0.0001)
-                {
-                    _zoomScale = Math.Max(0.1, Math.Min(4.0, value));
-                    OnPropertyChanged();
-                }
-            }
+            set => _zoomScale = Math.Max(0.1, Math.Min(4.0, value));
         }
 
         // Selected nodes
