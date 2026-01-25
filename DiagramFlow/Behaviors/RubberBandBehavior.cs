@@ -65,7 +65,9 @@ namespace DiagramFlow.Behaviors
 
             // Don't clear selection here - let ProcessSelection handle it based on modifier keys
             
-            _isSelecting = true;
+            try
+            {
+                _isSelecting = true;
             _startPoint = e.GetPosition(AssociatedObject);
 
                 if (SelectionRectangle != null)
