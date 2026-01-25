@@ -21,15 +21,15 @@ namespace DiagramFlow.Tests.ViewModels
         {
             var vm = new MainViewModel();
             
-            // Under lower limit
+            // 下限値未満
             vm.ZoomScale = 0.05;
             Assert.Equal(0.1, vm.ZoomScale);
 
-            // Over upper limit
+            // 上限値超過
             vm.ZoomScale = 5.0;
             Assert.Equal(4.0, vm.ZoomScale);
             
-            // Valid value
+            // 有効な値
             vm.ZoomScale = 2.0;
             Assert.Equal(2.0, vm.ZoomScale);
         }
@@ -41,14 +41,14 @@ namespace DiagramFlow.Tests.ViewModels
             var node1 = vm.Nodes[0];
             var node2 = vm.Nodes[1];
 
-            // Select node1
+            // node1を選択
             vm.SelectNode(node1);
             
             Assert.True(node1.IsSelected);
             Assert.Single(vm.SelectedNodes);
             Assert.Contains(node1, vm.SelectedNodes);
 
-            // Select node2 (should clear node1)
+            // node2を選択（node1はクリアされるべき）
             vm.SelectNode(node2);
 
             Assert.False(node1.IsSelected);
@@ -78,12 +78,12 @@ namespace DiagramFlow.Tests.ViewModels
             var vm = new MainViewModel();
             var node1 = vm.Nodes[0];
 
-            // Toggle On
+            // トグルオン
             vm.ToggleNodeSelection(node1);
             Assert.True(node1.IsSelected);
             Assert.Contains(node1, vm.SelectedNodes);
 
-            // Toggle Off
+            // トグルオフ
             vm.ToggleNodeSelection(node1);
             Assert.False(node1.IsSelected);
             Assert.DoesNotContain(node1, vm.SelectedNodes);
@@ -106,19 +106,19 @@ namespace DiagramFlow.Tests.ViewModels
             var vm = new MainViewModel();
             int initialCount = vm.Nodes.Count;
 
-            // Execute Add
+            // 追加を実行
             vm.AddNodeCommand.Execute(null);
 
             Assert.Equal(initialCount + 1, vm.Nodes.Count);
             Assert.True(vm.UndoService.CanUndo);
 
-            // Execute Undo
+            // 元に戻すを実行
             vm.UndoCommand.Execute(null);
             
             Assert.Equal(initialCount, vm.Nodes.Count);
             Assert.True(vm.UndoService.CanRedo);
 
-            // Execute Redo
+            // やり直しを実行
             vm.RedoCommand.Execute(null);
 
             Assert.Equal(initialCount + 1, vm.Nodes.Count);
@@ -128,7 +128,7 @@ namespace DiagramFlow.Tests.ViewModels
         public void DeleteSelectedCommand_ShouldRemoveNodesAndConnectors()
         {
             var vm = new MainViewModel();
-            // Clear default nodes for clean test
+            // クリーンなテストのためにデフォルトノードをクリア
             vm.Nodes.Clear();
 
             var node1 = new NodeViewModel { Text = "N1" };
@@ -136,19 +136,19 @@ namespace DiagramFlow.Tests.ViewModels
             vm.Nodes.Add(node1);
             vm.Nodes.Add(node2);
 
-            // Add connector
+            // コネクターを追加
             var connector = new ConnectorViewModel(node1, 0, node2, 0);
             vm.Connectors.Add(connector);
 
-            // Select node1 and delete
+            // node1を選択して削除
             vm.SelectNode(node1);
             vm.DeleteSelectedCommand.Execute(null);
 
-            // Node1 should be gone
+            // Node1は削除されるべき
             Assert.DoesNotContain(node1, vm.Nodes);
             Assert.Contains(node2, vm.Nodes);
 
-            // Connector should be gone (monitoring cascading delete)
+            // コネクターは削除されるべき（カスケード削除を監視）
             Assert.Empty(vm.Connectors);
         }
 
@@ -166,20 +166,20 @@ namespace DiagramFlow.Tests.ViewModels
             var connector = new ConnectorViewModel(node1, 0, node2, 0);
             vm.Connectors.Add(connector);
 
-            // Select connector only
+            // コネクターのみを選択
             vm.SelectConnector(connector);
             
-            // Verify selection
+            // 選択を確認
             Assert.Single(vm.SelectedConnectors);
             Assert.Empty(vm.SelectedNodes);
 
-            // Execute delete
+            // 削除を実行
             vm.DeleteSelectedCommand.Execute(null);
 
-            // Connectors should be empty
+            // コネクターは空であるべき
             Assert.Empty(vm.Connectors);
             
-            // Nodes should still exist
+            // ノードはまだ存在するべき
             Assert.Equal(2, vm.Nodes.Count);
         }
 
@@ -187,24 +187,24 @@ namespace DiagramFlow.Tests.ViewModels
         public void DeleteSelectedCommand_ShouldSupportUndoRedo()
         {
             var vm = new MainViewModel();
-            vm.Nodes.Clear(); // Clear default nodes
+            vm.Nodes.Clear(); // デフォルトノードをクリア
 
             var node1 = new NodeViewModel { Text = "N1" };
             vm.Nodes.Add(node1);
             
-            // Select and delete
+            // 選択して削除
             vm.SelectNode(node1);
             vm.DeleteSelectedCommand.Execute(null);
 
             Assert.Empty(vm.Nodes);
             Assert.True(vm.UndoService.CanUndo);
 
-            // Undo
+            // 元に戻す
             vm.UndoCommand.Execute(null);
             Assert.Single(vm.Nodes);
             Assert.Contains(node1, vm.Nodes);
 
-            // Redo
+            // やり直し
             vm.RedoCommand.Execute(null);
             Assert.Empty(vm.Nodes);
         }
@@ -221,7 +221,7 @@ namespace DiagramFlow.Tests.ViewModels
             Assert.True(mockService.SaveCalled);
             Assert.Equal("test.json", mockService.LastFilePath);
             Assert.NotNull(mockService.LastSavedDto);
-            // Default main view model has some nodes
+            // デフォルトの main view model にはいくつかのノードがある
             Assert.Equal(vm.Nodes.Count, mockService.LastSavedDto.Nodes.Count);
         }
 

@@ -11,23 +11,23 @@ namespace DiagramFlow.Tests.ViewModels
             var source = new NodeViewModel { X = 0, Y = 0, Width = 100, Height = 100 };
             var target = new NodeViewModel { X = 200, Y = 0, Width = 100, Height = 100 };
             
-            // Assume Port 0 is Top (Width/2, 0) relative to Node
-            // Port positions are calculated in NodeViewModel.GetPortPosition
-            // But checking ConnectorViewModel logic specifically:
+            // ポート0は上（ノードに対して幅/2, 0）と仮定
+            // ポート位置は NodeViewModel.GetPortPosition で計算される
+            // ただし、ここでは特に ConnectorViewModel ロジックを確認:
             
             var connector = new ConnectorViewModel(source, 0, target, 0);
             
             double initialX1 = connector.X1;
             double initialY1 = connector.Y1;
 
-            // Move source node
+            // ソースノードを移動
             source.X = 50;
             source.Y = 50;
 
             Assert.NotEqual(initialX1, connector.X1);
             Assert.NotEqual(initialY1, connector.Y1);
             
-            // Allow for some delta if calculation involves doubles, but X/Y should shift by 50
+            // 計算に double が含まれる場合は多少の差を許容するが、X/Y は50ずつシフトするべき
             Assert.Equal(initialX1 + 50, connector.X1);
             Assert.Equal(initialY1 + 50, connector.Y1);
         }
@@ -43,7 +43,7 @@ namespace DiagramFlow.Tests.ViewModels
             double initialX2 = connector.X2;
             double initialY2 = connector.Y2;
 
-            // Move target node
+            // ターゲットノードを移動
             target.X = 250;
             target.Y = 50;
 

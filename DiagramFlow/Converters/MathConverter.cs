@@ -17,7 +17,7 @@ namespace DiagramFlow.Converters
                 double x = System.Convert.ToDouble(value);
                 expression = expression.Replace("x", x.ToString(CultureInfo.InvariantCulture));
 
-                // Using DataTable.Compute for simple math evaluation
+                // 単純な数式評価に DataTable.Compute を使用
                 var result = new DataTable().Compute(expression, null);
                 return System.Convert.ToDouble(result);
             }

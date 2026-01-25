@@ -47,7 +47,7 @@ namespace DiagramFlow.Behaviors
             var node = AssociatedObject.DataContext as NodeViewModel;
             if (node == null || MainViewModel == null) return;
 
-            // Double click Check
+            // ダブルクリック確認
             if (e.ClickCount == 2)
             {
                 node.IsEditing = true;
@@ -55,7 +55,7 @@ namespace DiagramFlow.Behaviors
                 return;
             }
 
-            // Selection Logic
+            // 選択ロジック
             if ((Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control)
             {
                 MainViewModel.ToggleNodeSelection(node);
@@ -68,11 +68,11 @@ namespace DiagramFlow.Behaviors
                 }
             }
 
-            // Start Dragging
+            // ドラッグ開始
             _isDragging = true;
             _dragStartPosition = e.GetPosition(AssociatedObject);
             
-            // Finding ancestor Canvas:
+            // 親Canvasを検索:
             var canvas = VisualHelper.FindParent<Canvas>(AssociatedObject);
             if (canvas != null)
             {

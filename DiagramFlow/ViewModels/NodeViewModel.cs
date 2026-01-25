@@ -25,7 +25,7 @@ namespace DiagramFlow.ViewModels
 
         public Guid Id { get; set; } = Guid.NewGuid();
 
-        // Position
+        // 位置
         private double _x;
         public double X
         {
@@ -40,7 +40,7 @@ namespace DiagramFlow.ViewModels
             set => SetProperty(ref _y, value);
         }
 
-        // Size
+        // サイズ
         private double _width = 100;
         public double Width
         {
@@ -55,7 +55,7 @@ namespace DiagramFlow.ViewModels
             set => SetProperty(ref _height, Math.Max(MinHeight, value));
         }
 
-        // Content
+        // コンテンツ
         private string _text = "Node";
         public string Text
         {
@@ -63,7 +63,7 @@ namespace DiagramFlow.ViewModels
             set => SetProperty(ref _text, value);
         }
 
-        // Appearance
+        // 外観
         private Brush _background = Brushes.LightBlue;
         public Brush Background
         {
@@ -78,7 +78,7 @@ namespace DiagramFlow.ViewModels
             set => SetProperty(ref _shapeType, value);
         }
 
-        // State
+        // 状態
         private bool _isSelected;
         public bool IsSelected
         {
@@ -93,7 +93,7 @@ namespace DiagramFlow.ViewModels
             set => SetProperty(ref _isEditing, value);
         }
 
-        // Minimum size constants
+        // 最小サイズ定数
         public const double MinWidth = 30;
         public const double MinHeight = 30;
 
@@ -101,8 +101,8 @@ namespace DiagramFlow.ViewModels
         {
         }
 
-        // Port positions (calculated from current position and size)
-        // Port enum: 0=Top, 1=Bottom, 2=Left, 3=Right
+        // ポート位置（現在の位置とサイズから計算）
+        // ポート列挙: 0=上, 1=下, 2=左, 3=右
         public (double X, double Y) GetPortPosition(int port)
         {
             double centerX = X + Width / 2;
@@ -110,13 +110,13 @@ namespace DiagramFlow.ViewModels
 
             switch (port)
             {
-                case 0: // Top
+                case 0: // 上
                     return (centerX, Y);
-                case 1: // Bottom
+                case 1: // 下
                     return (centerX, Y + Height);
-                case 2: // Left
+                case 2: // 左
                     return (X, centerY);
-                case 3: // Right
+                case 3: // 右
                     return (X + Width, centerY);
                 default:
                     return (centerX, centerY);

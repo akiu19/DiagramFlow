@@ -36,7 +36,7 @@ namespace DiagramFlow.Behaviors
             {
                 ScrollViewer.PreviewMouseWheel += ScrollViewer_PreviewMouseWheel;
             }
-            // Support Left Double Click (Preview to ensure we catch it before children handle it)
+            // 左ダブルクリックをサポート（子要素より先にキャッチするためにPreviewを使用）
             AssociatedObject.PreviewMouseLeftButtonDown += OnMouseLeftButtonDown;
         }
 
@@ -68,7 +68,7 @@ namespace DiagramFlow.Behaviors
         {
             if (e.ClickCount == 2)
             {
-                // Ignore if clicked on an item (Node or Connector)
+                // アイテム（ノードまたはコネクター）上でクリックした場合は無視
                 if (e.OriginalSource is DependencyObject obj)
                 {
                     if (IsItem(obj)) return;
@@ -80,8 +80,8 @@ namespace DiagramFlow.Behaviors
 
         private bool IsItem(DependencyObject obj)
         {
-            // Traverse up to find if we are in a Node or Connector
-            // Check DataContext
+            // ノードまたはコネクター内にいるかどうかを確認するため上位を走査
+            // DataContextを確認
             if (obj is FrameworkElement fe)
             {
                 if (fe.DataContext != null && 
@@ -92,10 +92,10 @@ namespace DiagramFlow.Behaviors
                 }
             }
             
-            // Or simple check: if it is not the associated object or its direct background
-            // But AssociatedObject is the Grid container.
-            // Items are children.
-            // DataContext check is robust.
+            // または単純なチェック: 関連オブジェクトまたはその直接の背景でない場合
+            // ただし、AssociatedObject は Grid コンテナ。
+            // アイテムは子要素。
+            // DataContext チェックは堅牢。
             
             var parent = VisualTreeHelper.GetParent(obj);
             if (parent != null)
@@ -106,9 +106,9 @@ namespace DiagramFlow.Behaviors
 
         private void HandleDoubleClick(MouseButtonEventArgs e)
         {
-             // Toggle zoom
+             // ズームを切り替え
             double targetScale = (Math.Abs(ZoomScale - 1.0) < 0.01) ? 2.0 : 1.0;
-            // Use ScrollViewer position for center
+            // 中心の ScrollViewer 位置を使用
             Point center = e.GetPosition(ScrollViewer);
             ZoomToPoint(targetScale, center, true);
             e.Handled = true;
@@ -122,18 +122,18 @@ namespace DiagramFlow.Behaviors
             double startHorizontalOffset = ScrollViewer.HorizontalOffset;
             double startVerticalOffset = ScrollViewer.VerticalOffset;
 
-            // Current content point under center
+            // 中心下の現在のコンテンツポイント
             Point contentPoint = new Point(
                 (startHorizontalOffset + centerPoint.X) / startScale,
                 (startVerticalOffset + centerPoint.Y) / startScale
             );
 
-            // Calculate offsets for target scale to keep contentPoint at center
-            // Viewport might change? Assuming similar viewport
+            // contentPoint を中心に維持するためのターゲットスケールのオフセットを計算
+            // ビューポートが変更される可能性がある？類似のビューポートを想定
             double targetHorizontalOffset = contentPoint.X * targetScale - (ScrollViewer.ViewportWidth / 2);
             double targetVerticalOffset = contentPoint.Y * targetScale - (ScrollViewer.ViewportHeight / 2);
             
-            // Adjust bounds (min 0) handled by ScrollViewer usually, but for calculation:
+            // 境界を調整（最小 0）は通常 ScrollViewer で処理されるが、計算のため:
              // targetHorizontalOffset = Math.Max(0, targetHorizontalOffset);
              // targetVerticalOffset = Math.Max(0, targetVerticalOffset);
 

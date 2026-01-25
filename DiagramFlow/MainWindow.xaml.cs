@@ -25,7 +25,7 @@ namespace DiagramFlow
 
         private OperationState _currentState = OperationState.Idle;
 
-        // Resize operation
+        // リサイズ操作
         private Point _resizeStartSize;
         private NodeViewModel _resizingNode;
         private string _originalNodeText;
@@ -69,7 +69,7 @@ namespace DiagramFlow
 
             if (e.Key == Key.Enter)
             {
-                // Commit
+                // コミット
                 if (_originalNodeText != node.Text)
                 {
                     ViewModel.UndoService.AddToHistory(
@@ -80,7 +80,7 @@ namespace DiagramFlow
             }
             else if (e.Key == Key.Escape)
             {
-                // Revert
+                // 元に戻す
                 node.Text = _originalNodeText;
                 node.IsEditing = false;
                 e.Handled = true;
@@ -93,7 +93,7 @@ namespace DiagramFlow
             var node = textBox?.DataContext as NodeViewModel;
             if (node != null)
             {
-                if (node.IsEditing) // If still editing (not cancelled by Esc)
+                if (node.IsEditing) // まだ編集中の場合（Escでキャンセルされていない）
                 {
                     if (_originalNodeText != node.Text)
                     {
@@ -236,7 +236,7 @@ namespace DiagramFlow
 
         #region Clipboard Operations
 
-        // Logic moved to ClipboardService and MainViewModel
+        // ロジックは ClipboardService と MainViewModel に移動
 
         #endregion
 
