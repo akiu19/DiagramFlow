@@ -5,11 +5,186 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:DiagramFlow"
         xmlns:vm="clr-namespace:DiagramFlow.ViewModels"
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:b="clr-namespace:DiagramFlow.Behaviors"
+        xmlns:c="clr-namespace:DiagramFlow.Converters"
         mc:Ignorable="d"
-        Title="Diagram Editor" Height="600" Width="800">
+        Title="Diagram Editor" Height="700" Width="1000"
+        KeyDown="Window_KeyDown">
     <Window.DataContext>
         <vm:MainViewModel />
     </Window.DataContext>
+    
+    <Window.Resources>
+        <c:MathConverter x:Key="MathConverter"/>
+
+        <!-- Node DataTemplate -->
+        <DataTemplate x:Key="NodeTemplate" DataType="{x:Type vm:NodeViewModel}">
+            <Grid x:Name="NodeContainer" Width="{Binding Width}" Height="{Binding Height}">
+                <i:Interaction.Behaviors>
+                    <b:NodeInteractionBehavior MainViewModel="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}" />
+                </i:Interaction.Behaviors>
+
+                <!-- Shape Render -->
+                <Grid>
+                    <!-- Rectangle -->
+                    <Border x:Name="RectShape"
+                            Background="{Binding Background}" 
+                            BorderBrush="Black" BorderThickness="1"
+                            CornerRadius="3"
+                            Visibility="Collapsed"/>
+                    <!-- Ellipse -->
+                    <Ellipse x:Name="EllipseShape"
+                             Fill="{Binding Background}"
+                             Stroke="Black" StrokeThickness="1"
+                             Visibility="Collapsed"/>
+                    <!-- Diamond (Decision) -->
+                    <Path x:Name="DiamondShape"
+                          Fill="{Binding Background}"
+                          Stroke="Black" StrokeThickness="1"
+                          Stretch="Fill"
+                          Data="M 0.5,0 L 1,0.5 L 0.5,1 L 0,0.5 Z"
+                          Visibility="Collapsed"/>
+                </Grid>
+
+                <!-- Text Content -->
+                <Grid>
+                    <!-- Text display -->
+                    <TextBlock x:Name="NodeText"
+                               Text="{Binding Text}" 
+                               HorizontalAlignment="Center" 
+                               VerticalAlignment="Center"
+                               TextWrapping="Wrap"
+                               Visibility="Visible"/>
+                    <!-- Text edit mode -->
+                    <TextBox x:Name="NodeTextBox"
+                             Text="{Binding Text, UpdateSourceTrigger=PropertyChanged}"
+                             HorizontalAlignment="Center"
+                             VerticalAlignment="Center"
+                             MinWidth="50"
+                             Visibility="Collapsed"
+                             GotFocus="NodeTextBox_GotFocus"
+                             LostFocus="NodeTextBox_LostFocus"
+                             KeyDown="NodeTextBox_KeyDown"/>
+                </Grid>
+
+                <!-- Selection indicator -->
+                <Rectangle x:Name="SelectionBorder"
+                           Stroke="DodgerBlue"
+                           StrokeThickness="2"
+                           StrokeDashArray="3 2"
+                           IsHitTestVisible="False"
+                           Visibility="Collapsed"/>
+
+                <!-- Connection ports (visible on hover/select) -->
+                <Canvas x:Name="PortCanvas" IsHitTestVisible="True">
+                    <!-- Top port -->
+                    <Ellipse x:Name="TopPort" Tag="0"
+                             Width="10" Height="10"
+                             Fill="Gray" Stroke="Black" StrokeThickness="1"
+                             Canvas.Top="-5"
+                             Canvas.Left="{Binding Width, Converter={StaticResource MathConverter}, ConverterParameter=x/2-5}"
+                             Cursor="Cross"
+                             Visibility="Collapsed"/>
+                    <!-- Bottom port -->
+                    <Ellipse x:Name="BottomPort" Tag="1"
+                             Width="10" Height="10"
+                             Fill="Gray" Stroke="Black" StrokeThickness="1"
+                             Canvas.Top="{Binding Height}"
+                             Canvas.Left="{Binding Width, Converter={StaticResource MathConverter}, ConverterParameter=x/2-5}"
+                             Cursor="Cross"
+                             Visibility="Collapsed"/>
+                    <!-- Left port -->
+                    <Ellipse x:Name="LeftPort" Tag="2"
+                             Width="10" Height="10"
+                             Fill="Gray" Stroke="Black" StrokeThickness="1"
+                             Canvas.Left="-5"
+                             Canvas.Top="{Binding Height, Converter={StaticResource MathConverter}, ConverterParameter=x/2-5}"
+                             Cursor="Cross"
+                             Visibility="Collapsed"/>
+                    <!-- Right port -->
+                    <Ellipse x:Name="RightPort" Tag="3"
+                             Width="10" Height="10"
+                             Fill="Gray" Stroke="Black" StrokeThickness="1"
+                             Canvas.Left="{Binding Width}"
+                             Canvas.Top="{Binding Height, Converter={StaticResource MathConverter}, ConverterParameter=x/2-5}"
+                             Cursor="Cross"
+                             Visibility="Collapsed"/>
+                </Canvas>
+
+                <!-- Resize handles -->
+                <Canvas x:Name="ResizeHandles" Visibility="Collapsed">
+                    <Thumb x:Name="ResizeThumb" Tag="BR"
+                           Width="10" Height="10"
+                           Canvas.Left="{Binding Width}"
+                           Canvas.Top="{Binding Height}"
+                           DragDelta="ResizeThumb_DragDelta"
+                           DragStarted="ResizeThumb_DragStarted"
+                           DragCompleted="ResizeThumb_DragCompleted"
+                           Cursor="SizeNWSE">
+                        <Thumb.Template>
+                            <ControlTemplate>
+                                <Rectangle Fill="White" Stroke="Black" StrokeThickness="1"/>
+                            </ControlTemplate>
+                        </Thumb.Template>
+                    </Thumb>
+                </Canvas>
+            </Grid>
+            
+            <DataTemplate.Triggers>
+                <!-- Selection Triggers -->
+                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                    <Setter TargetName="SelectionBorder" Property="Visibility" Value="Visible"/>
+                    <Setter TargetName="ResizeHandles" Property="Visibility" Value="Visible"/>
+                    <Setter TargetName="TopPort" Property="Visibility" Value="Visible"/>
+                    <Setter TargetName="BottomPort" Property="Visibility" Value="Visible"/>
+                    <Setter TargetName="LeftPort" Property="Visibility" Value="Visible"/>
+                    <Setter TargetName="RightPort" Property="Visibility" Value="Visible"/>
+                </DataTrigger>
+                
+                <!-- Editing Triggers -->
+                <DataTrigger Binding="{Binding IsEditing}" Value="True">
+                    <Setter TargetName="NodeText" Property="Visibility" Value="Collapsed"/>
+                    <Setter TargetName="NodeTextBox" Property="Visibility" Value="Visible"/>
+                </DataTrigger>
+                
+                <!-- Shape Type Triggers -->
+                <DataTrigger Binding="{Binding ShapeType}" Value="Rectangle">
+                    <Setter TargetName="RectShape" Property="Visibility" Value="Visible"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding ShapeType}" Value="Ellipse">
+                    <Setter TargetName="EllipseShape" Property="Visibility" Value="Visible"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding ShapeType}" Value="Diamond">
+                    <Setter TargetName="DiamondShape" Property="Visibility" Value="Visible"/>
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+
+        <!-- Connector DataTemplate -->
+        <DataTemplate x:Key="ConnectorTemplate" DataType="{x:Type vm:ConnectorViewModel}">
+            <Grid>
+                <!-- Invisible thicker line for hit testing -->
+                <Line X1="{Binding X1}" Y1="{Binding Y1}"
+                      X2="{Binding X2}" Y2="{Binding Y2}"
+                      Stroke="Transparent" StrokeThickness="10"
+                      MouseLeftButtonDown="Connector_MouseLeftButtonDown"
+                      Cursor="Hand"/>
+                
+                <!-- Visible line -->
+                <Line x:Name="VisibleLine"
+                      X1="{Binding X1}" Y1="{Binding Y1}"
+                      X2="{Binding X2}" Y2="{Binding Y2}"
+                      Stroke="Black" StrokeThickness="2"
+                      IsHitTestVisible="False"/>
+            </Grid>
+            <DataTemplate.Triggers>
+                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                    <Setter TargetName="VisibleLine" Property="Stroke" Value="Red"/>
+                </DataTrigger>
+            </DataTemplate.Triggers>
+        </DataTemplate>
+    </Window.Resources>
     
     <Grid>
         <Grid.RowDefinitions>
@@ -21,13 +196,15 @@
         <!-- Toolbar -->
         <ToolBarTray Grid.Row="0">
             <ToolBar>
-                <Button Content="Save" />
-                <Button Content="Open" />
+                <Button Content="Save" Click="Save_Click" ToolTip="Save diagram to JSON"/>
+                <Button Content="Open" Click="Open_Click" ToolTip="Open diagram from JSON"/>
                 <Separator />
-                <Button Content="Reset Zoom"/>
-                <!-- Drag source for new nodes goes here -->
-                <Label Content="Drag Node: " VerticalAlignment="Center"/>
-                <Rectangle Width="30" Height="20" Fill="LightBlue" Stroke="Black" />
+                <Button Content="Rectangle" Command="{Binding AddNodeCommand}" CommandParameter="Rectangle" ToolTip="Add Rectangle"/>
+                <Button Content="Ellipse" Command="{Binding AddNodeCommand}" CommandParameter="Ellipse" ToolTip="Add Ellipse"/>
+                <Button Content="Diamond" Command="{Binding AddNodeCommand}" CommandParameter="Diamond" ToolTip="Add Diamond"/>
+                <Button Content="Delete" Command="{Binding DeleteSelectedCommand}" ToolTip="Delete selected items (Del)"/>
+                <Separator />
+                <Button Content="Reset Zoom" Click="ResetZoom_Click" ToolTip="Reset zoom to 100%"/>
             </ToolBar>
         </ToolBarTray>
 
@@ -36,49 +213,101 @@
                       Grid.Row="1" 
                       HorizontalScrollBarVisibility="Auto" 
                       VerticalScrollBarVisibility="Auto"
-                      CanContentScroll="True">
-            <!-- Using LayoutTransform on the content of ScrollViewer -->
-            <ItemsControl ItemsSource="{Binding Nodes}">
-                <ItemsControl.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <Canvas Width="10000" Height="10000" Background="White"/>
-                    </ItemsPanelTemplate>
-                </ItemsControl.ItemsPanel>
-                <ItemsControl.ItemContainerStyle>
-                    <Style TargetType="ContentPresenter">
-                        <Setter Property="Canvas.Left" Value="{Binding X.Value}"/>
-                        <Setter Property="Canvas.Top" Value="{Binding Y.Value}"/>
-                    </Style>
-                </ItemsControl.ItemContainerStyle>
-                <ItemsControl.ItemTemplate>
-                    <DataTemplate>
-                        <!-- Node Template -->
-                        <Border Background="{Binding Background.Value}" 
-                                Width="{Binding Width.Value}" 
-                                Height="{Binding Height.Value}"
-                                BorderBrush="Black" BorderThickness="1"
-                                CornerRadius="3">
-                            <TextBlock Text="{Binding Text.Value}" 
-                                       HorizontalAlignment="Center" 
-                                       VerticalAlignment="Center"/>
-                        </Border>
-                    </DataTemplate>
-                </ItemsControl.ItemTemplate>
-                
-                <ItemsControl.LayoutTransform>
-                    <ScaleTransform ScaleX="{Binding ZoomScale.Value}" 
-                                    ScaleY="{Binding ZoomScale.Value}"/>
-                </ItemsControl.LayoutTransform>
-            </ItemsControl>
+                      Background="LightGray">
+            <i:Interaction.Behaviors>
+                <b:PanBehavior />
+            </i:Interaction.Behaviors>
+            
+            <Grid x:Name="CanvasContainer">
+                <i:Interaction.Behaviors>
+                    <b:ZoomBehavior ScrollViewer="{Binding ElementName=MainScrollViewer}" 
+                                    ZoomScale="{Binding ZoomScale, Mode=TwoWay}" />
+                </i:Interaction.Behaviors>
+                <Grid.LayoutTransform>
+                    <ScaleTransform x:Name="CanvasScale"
+                                    ScaleX="{Binding ZoomScale}" 
+                                    ScaleY="{Binding ZoomScale}"/>
+                </Grid.LayoutTransform>
+
+                <!-- Main Canvas -->
+                <Canvas x:Name="DiagramCanvas" 
+                        Width="10000" Height="10000" 
+                        Background="White">
+                    <i:Interaction.Behaviors>
+                        <b:RubberBandBehavior MainViewModel="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}" 
+                                              SelectionRectangle="{Binding ElementName=SelectionRectangle}" />
+                        <b:ConnectionCreationBehavior MainViewModel="{Binding DataContext, RelativeSource={RelativeSource AncestorType=Window}}" 
+                                                      TempConnectionLine="{Binding ElementName=TempConnectionLine}" />
+                    </i:Interaction.Behaviors>
+
+                    <!-- Connectors layer (behind nodes) -->
+                    <ItemsControl ItemsSource="{Binding Connectors}"
+                                  ItemTemplate="{StaticResource ConnectorTemplate}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <Canvas/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+
+                    <!-- Nodes layer -->
+                    <ItemsControl x:Name="NodesControl" ItemsSource="{Binding Nodes}"
+                                  ItemTemplate="{StaticResource NodeTemplate}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <Canvas/>
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemContainerStyle>
+                            <Style TargetType="ContentPresenter">
+                                <Setter Property="Canvas.Left" Value="{Binding X}"/>
+                                <Setter Property="Canvas.Top" Value="{Binding Y}"/>
+                            </Style>
+                        </ItemsControl.ItemContainerStyle>
+                    </ItemsControl>
+
+                    <!-- Rubber band selection rectangle -->
+                    <Rectangle x:Name="SelectionRectangle"
+                               Stroke="DodgerBlue"
+                               StrokeThickness="1"
+                               StrokeDashArray="3 2"
+                               Fill="#220078D7"
+                               Visibility="Collapsed"/>
+
+                    <!-- Temporary connection line -->
+                    <Line x:Name="TempConnectionLine"
+                          Stroke="Gray"
+                          StrokeThickness="2"
+                          StrokeDashArray="5 3"
+                          Visibility="Collapsed"/>
+                </Canvas>
+            </Grid>
         </ScrollViewer>
 
         <!-- Status Bar / Zoom Slider -->
-        <Grid Grid.Row="2" Background="LightGray">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="10">
+        <Grid Grid.Row="2" Background="#F0F0F0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <TextBlock x:Name="StatusText" 
+                       Grid.Column="0" 
+                       Text="Ready" 
+                       VerticalAlignment="Center" 
+                       Margin="10,5"/>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="10,5">
                 <TextBlock Text="Zoom: " VerticalAlignment="Center"/>
-                <Slider Minimum="0.1" Maximum="4.0" Width="200"
-                        Value="{Binding ZoomScale.Value}"/>
-                <TextBlock Text="{Binding ZoomScale.Value, StringFormat=P0}" VerticalAlignment="Center" Margin="5,0"/>
+                <Slider x:Name="ZoomSlider"
+                        Minimum="0.1" Maximum="4.0" Width="150"
+                        Value="{Binding ZoomScale}"
+                        TickFrequency="0.1"
+                        IsSnapToTickEnabled="False"/>
+                <TextBlock Text="{Binding ZoomScale, StringFormat={}{0:P0}}" 
+                           VerticalAlignment="Center" 
+                           Margin="5,0"
+                           Width="50"/>
             </StackPanel>
         </Grid>
     </Grid>
