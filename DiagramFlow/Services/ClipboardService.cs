@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Media;
 using DiagramFlow.Models;
 using DiagramFlow.ViewModels;
+using DiagramFlow.Helpers;
 using Newtonsoft.Json;
 
 namespace DiagramFlow.Services
@@ -28,17 +29,7 @@ namespace DiagramFlow.Services
             // Add selected nodes
             foreach (var node in nodesList)
             {
-                dto.Nodes.Add(new NodeDto
-                {
-                    Id = node.Id,
-                    X = node.X,
-                    Y = node.Y,
-                    Width = node.Width,
-                    Height = node.Height,
-                    Text = node.Text,
-                    Color = (node.Background as SolidColorBrush)?.Color.ToString() ?? "LightBlue",
-                    ShapeType = node.ShapeType
-                });
+                dto.Nodes.Add(node.ToDto());
             }
 
             // Add connections if both ends are in the selection
@@ -49,19 +40,12 @@ namespace DiagramFlow.Services
                     if (nodesList.Contains(conn.SourceNode) &&
                         nodesList.Contains(conn.TargetNode))
                     {
-                        dto.Connections.Add(new ConnectionDto
-                        {
-                            Id = conn.Id,
-                            SourceNodeId = conn.SourceNode.Id,
-                            SourcePort = conn.SourcePort,
-                            TargetNodeId = conn.TargetNode.Id,
-                            TargetPort = conn.TargetPort
-                        });
+                        dto.Connections.Add(conn.ToDto());
                     }
                 }
             }
 
-            string json = JsonConvert.SerializeObject(dto);
+            var json = JsonConvert.SerializeObject(dto);
             _clipboard.SetText(json);
         }
 

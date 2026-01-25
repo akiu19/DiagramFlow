@@ -9,6 +9,7 @@ using System.Windows.Shapes;
 using Microsoft.Win32;
 using DiagramFlow.ViewModels;
 using DiagramFlow.Services;
+using DiagramFlow.Helpers;
 using System.Linq;
 using Newtonsoft.Json;
 
@@ -111,7 +112,7 @@ namespace DiagramFlow
         private void ResizeThumb_DragStarted(object sender, DragStartedEventArgs e)
         {
             var thumb = sender as Thumb;
-            var node = FindParentDataContext<NodeViewModel>(thumb);
+            var node = VisualHelper.FindParentDataContext<NodeViewModel>(thumb);
             if (node == null) return;
 
             _currentState = OperationState.ResizingNode;
@@ -254,9 +255,7 @@ namespace DiagramFlow
             if (dialog.ShowDialog() == true)
             {
                 try {
-                    var dto = ConvertToDto();
-                    var service = new DiagramPersistenceService();
-                    service.Save(dto, dialog.FileName);
+                    ViewModel.Save(dialog.FileName);
                     UpdateStatus($"Saved to {dialog.FileName}");
                 }
                 catch (Exception ex)
@@ -279,110 +278,14 @@ namespace DiagramFlow
             {
                 try
                 {
-                    var service = new DiagramPersistenceService();
-                    var dto = service.Load(dialog.FileName);
-                    if (dto != null)
-                    {
-                        LoadFromDto(dto);
-                        UpdateStatus($"Loaded from {dialog.FileName}");
-                    }
+                    ViewModel.Load(dialog.FileName);
+                    UpdateStatus($"Loaded from {dialog.FileName}");
                 }
                 catch (Exception ex)
                 {
                     MessageBox.Show($"Error loading file: {ex.Message}");
                 }
             }
-        }
-
-        private Models.DiagramDto ConvertToDto()
-        {
-            var dto = new Models.DiagramDto
-            {
-                ZoomLevel = ViewModel.ZoomScale
-            };
-
-            foreach (var node in ViewModel.Nodes)
-            {
-                dto.Nodes.Add(new Models.NodeDto
-                {
-                    Id = node.Id,
-                    X = node.X,
-                    Y = node.Y,
-                    Width = node.Width,
-                    Height = node.Height,
-                    Text = node.Text,
-                    Color = (node.Background as SolidColorBrush)?.Color.ToString() ?? "LightBlue",
-                    ShapeType = node.ShapeType
-                });
-            }
-
-            foreach (var conn in ViewModel.Connectors)
-            {
-                dto.Connections.Add(new Models.ConnectionDto
-                {
-                    Id = conn.Id,
-                    SourceNodeId = conn.SourceNode.Id,
-                    SourcePort = conn.SourcePort,
-                    TargetNodeId = conn.TargetNode.Id,
-                    TargetPort = conn.TargetPort
-                });
-            }
-
-            return dto;
-        }
-
-        private void LoadFromDto(Models.DiagramDto dto)
-        {
-            ViewModel.Nodes.Clear();
-            ViewModel.Connectors.Clear();
-            ViewModel.SelectedNodes.Clear();
-            ViewModel.SelectedConnectors.Clear();
-
-            var nodeMap = new Dictionary<Guid, NodeViewModel>();
-
-            foreach (var nodeDto in dto.Nodes)
-            {
-                var node = new NodeViewModel
-                {
-                    Id = nodeDto.Id,
-                    X = nodeDto.X,
-                    Y = nodeDto.Y,
-                    Width = nodeDto.Width,
-                    Height = nodeDto.Height,
-                    Text = nodeDto.Text,
-                    ShapeType = nodeDto.ShapeType
-                };
-
-                if (!string.IsNullOrEmpty(nodeDto.Color))
-                {
-                    try
-                    {
-                        var color = (Color)ColorConverter.ConvertFromString(nodeDto.Color);
-                        node.Background = new SolidColorBrush(color);
-                    }
-                    catch { }
-                }
-
-                ViewModel.Nodes.Add(node);
-                nodeMap[node.Id] = node;
-            }
-
-            foreach (var connDto in dto.Connections)
-            {
-                if (nodeMap.TryGetValue(connDto.SourceNodeId, out var sourceNode) &&
-                    nodeMap.TryGetValue(connDto.TargetNodeId, out var targetNode))
-                {
-                    var connector = new ConnectorViewModel(
-                        sourceNode, connDto.SourcePort,
-                        targetNode, connDto.TargetPort)
-                    {
-                        Id = connDto.Id
-                    };
-                    ViewModel.Connectors.Add(connector);
-                }
-            }
-
-            ViewModel.ZoomScale = dto.ZoomLevel > 0 ? dto.ZoomLevel : 1.0;
         }
 
         #endregion
@@ -392,19 +295,6 @@ namespace DiagramFlow
         private void UpdateStatus(string message)
         {
             StatusText.Text = message;
-        }
-
-        private T FindParentDataContext<T>(DependencyObject child) where T : class
-        {
-            if (child == null) return null;
-            var frameworkElement = child as FrameworkElement;
-            if (frameworkElement?.DataContext is T data)
-            {
-                return data;
-            }
-            
-            var parent = VisualTreeHelper.GetParent(child);
-            return FindParentDataContext<T>(parent);
         }
 
         #endregion
