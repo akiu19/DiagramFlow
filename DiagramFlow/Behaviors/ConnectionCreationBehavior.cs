@@ -6,6 +6,7 @@ using System.Windows.Shapes;
 using System.Windows.Media;
 using Microsoft.Xaml.Behaviors;
 using DiagramFlow.ViewModels;
+using DiagramFlow.Helpers;
 
 namespace DiagramFlow.Behaviors
 {
@@ -56,7 +57,7 @@ namespace DiagramFlow.Behaviors
             // Check if clicked on a Port (Ellipse with Tag)
             if (e.OriginalSource is Ellipse port && port.Tag != null)
             {
-                var node = FindParentDataContext<NodeViewModel>(port);
+                var node = VisualHelper.FindParentDataContext<NodeViewModel>(port);
                 if (node == null) return;
 
                 if (!int.TryParse(port.Tag.ToString(), out int portIndex)) return;
@@ -165,19 +166,6 @@ namespace DiagramFlow.Behaviors
             }
 
             return (null, 0);
-        }
-
-        private T FindParentDataContext<T>(DependencyObject child) where T : class
-        {
-            if (child == null) return null;
-            var frameworkElement = child as FrameworkElement;
-            if (frameworkElement?.DataContext is T data)
-            {
-                return data;
-            }
-            
-            var parent = VisualTreeHelper.GetParent(child);
-            return FindParentDataContext<T>(parent);
         }
     }
 }

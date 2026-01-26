@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Windows.Media;
+using DiagramFlow.Models;
 
 namespace DiagramFlow.ViewModels
 {
@@ -34,6 +35,13 @@ namespace DiagramFlow.ViewModels
 
         // Appearance
         public Brush Background { get; set; } = Brushes.LightBlue;
+
+        private ShapeType _shapeType = ShapeType.Rectangle;
+        public ShapeType ShapeType
+        {
+            get => _shapeType;
+            set => SetProperty(ref _shapeType, value);
+        }
 
         // State
         public bool IsSelected { get; set; }

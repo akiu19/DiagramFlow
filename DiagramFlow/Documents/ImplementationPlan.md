@@ -25,13 +25,13 @@ NuGetパッケージマネージャーを使用して以下のライブラリを
 
 ### 2.1 Modelレイヤー
 JSONシリアライズ対象となるDTOを定義する。
-*   `NodeDto`: ID, X, Y, Width, Height, Text, Color
+*   `NodeDto`: ID, X, Y, Width, Height, Text, Color, **ShapeType**
 *   `ConnectionDto`: ID, SourceNodeId, SourcePort, TargetNodeId, TargetPort
 *   `DiagramDto`: Nodeリスト, Connectionリスト, ZoomLevel
 
 ### 2.2 ViewModelレイヤー (基本)
 *   `NodeViewModel`:
-    *   位置・サイズ・テキストをFodyまたはReactivePropertyで定義。
+    *   位置・サイズ・テキスト・**図形種別**をFodyまたはReactivePropertyで定義。
     *   選択状態フラグ (`IsSelected`)。
 *   `ConnectorViewModel`:
     *   接続元・接続先の `NodeViewModel` への参照を持つ。
@@ -48,7 +48,7 @@ JSONシリアライズ対象となるDTOを定義する。
 
 ### 3.1 メイン画面構成 (`MainWindow.xaml`)
 *   `Grid` レイアウト
-    *   上部：ツールバー (矩形追加ボタン, 保存/開くボタン)
+    *   上部：ツールバー (**各図形追加ボタン**, 保存/開くボタン)
     *   中央：`ScrollViewer` > `Grid` (背景) > `Canvas` (ItemsControlで図形描画)
     *   下部/周辺：ズームスライダー
 
@@ -70,7 +70,7 @@ JSONシリアライズ対象となるDTOを定義する。
 ### 4.1 図形描画 (ItemsControl)
 *   `Canvas` 上に `ItemsControl` を配置し、`ItemsSource` にNodesをバインド。
 *   `ItemContainerStyle` で `Canvas.Left`, `Canvas.Top` をViewModelとバインド。
-*   `DataTemplate` で矩形 (`Border`, `TextBox`) を定義。
+*   `DataTemplate` で図形を定義。`Binding ShapeType` に基づく `DataTemplateSelector` または `Style.Triggers` を使用して、`Rectangle` (Border), `Ellipse`, `Path` (Diamond) を切り替える。
 
 ### 4.2 図形の移動 (MoveBehavior)
 *   図形(`Border`)に対するドラッグ操作を検知。

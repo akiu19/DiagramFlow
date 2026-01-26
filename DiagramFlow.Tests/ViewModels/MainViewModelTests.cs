@@ -1,6 +1,9 @@
 ﻿using System.Linq;
 using Xunit;
 using DiagramFlow.ViewModels;
+using DiagramFlow.Services;
+using DiagramFlow.Models;
+using System.Collections.Generic;
 
 namespace DiagramFlow.Tests.ViewModels
 {
@@ -204,6 +207,71 @@ namespace DiagramFlow.Tests.ViewModels
             // Redo
             vm.RedoCommand.Execute(null);
             Assert.Empty(vm.Nodes);
+        }
+
+        [Fact]
+        public void Save_ShouldCallPersistenceService()
+        {
+            var vm = new MainViewModel();
+            var mockService = new MockPersistenceService();
+            vm.PersistenceService = mockService;
+            
+            vm.Save("test.json");
+            
+            Assert.True(mockService.SaveCalled);
+            Assert.Equal("test.json", mockService.LastFilePath);
+            Assert.NotNull(mockService.LastSavedDto);
+            // Default main view model has some nodes
+            Assert.Equal(vm.Nodes.Count, mockService.LastSavedDto.Nodes.Count);
+        }
+
+        [Fact]
+        public void Load_ShouldUpdateViewModelFromDto()
+        {
+            var vm = new MainViewModel();
+            var mockService = new MockPersistenceService();
+            vm.PersistenceService = mockService;
+
+            var dto = new DiagramDto
+            {
+                ZoomLevel = 2.5,
+                Nodes = new List<NodeDto>
+                {
+                    new NodeDto { Id = System.Guid.NewGuid(), Text = "Loaded", X = 10, Y = 10 }
+                }
+            };
+            mockService.DtoToReturn = dto;
+
+            vm.Load("test.json");
+
+            Assert.True(mockService.LoadCalled);
+            Assert.Equal("test.json", mockService.LastFilePath);
+            Assert.Equal(2.5, vm.ZoomScale);
+            Assert.Single(vm.Nodes);
+            Assert.Equal("Loaded", vm.Nodes[0].Text);
+        }
+
+        private class MockPersistenceService : IDiagramPersistenceService
+        {
+            public bool SaveCalled { get; private set; }
+            public bool LoadCalled { get; private set; }
+            public string LastFilePath { get; private set; }
+            public DiagramDto LastSavedDto { get; private set; }
+            public DiagramDto DtoToReturn { get; set; }
+
+            public void Save(DiagramDto diagram, string filePath)
+            {
+                SaveCalled = true;
+                LastSavedDto = diagram;
+                LastFilePath = filePath;
+            }
+
+            public DiagramDto Load(string filePath)
+            {
+                LoadCalled = true;
+                LastFilePath = filePath;
+                return DtoToReturn;
+            }
         }
     }
 }

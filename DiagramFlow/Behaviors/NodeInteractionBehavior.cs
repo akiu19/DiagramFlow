@@ -5,6 +5,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using Microsoft.Xaml.Behaviors;
 using DiagramFlow.ViewModels;
+using DiagramFlow.Helpers;
 
 namespace DiagramFlow.Behaviors
 {
@@ -71,8 +72,8 @@ namespace DiagramFlow.Behaviors
             _isDragging = true;
             _dragStartPosition = e.GetPosition(AssociatedObject);
             
-             // Finding ancestor Canvas:
-            var canvas = FindParent<Canvas>(AssociatedObject);
+            // Finding ancestor Canvas:
+            var canvas = VisualHelper.FindParent<Canvas>(AssociatedObject);
             if (canvas != null)
             {
                 _lastMousePosition = e.GetPosition(canvas);
@@ -87,7 +88,7 @@ namespace DiagramFlow.Behaviors
         {
             if (!_isDragging || MainViewModel == null) return;
 
-            var canvas = FindParent<Canvas>(AssociatedObject);
+            var canvas = VisualHelper.FindParent<Canvas>(AssociatedObject);
             if (canvas == null) return;
 
             Point currentPos = e.GetPosition(canvas);
@@ -107,7 +108,7 @@ namespace DiagramFlow.Behaviors
                 _isDragging = false;
                 AssociatedObject.ReleaseMouseCapture();
                 
-                var canvas = FindParent<Canvas>(AssociatedObject);
+                var canvas = VisualHelper.FindParent<Canvas>(AssociatedObject);
                 if (canvas != null && MainViewModel != null)
                 {
                     Point currentPos = e.GetPosition(canvas);
@@ -123,14 +124,6 @@ namespace DiagramFlow.Behaviors
                 
                 e.Handled = true;
             }
-        }
-
-        private static T FindParent<T>(DependencyObject child) where T : DependencyObject
-        {
-            DependencyObject parentObject = VisualTreeHelper.GetParent(child);
-            if (parentObject == null) return null;
-            if (parentObject is T parent) return parent;
-            return FindParent<T>(parentObject);
         }
     }
 }

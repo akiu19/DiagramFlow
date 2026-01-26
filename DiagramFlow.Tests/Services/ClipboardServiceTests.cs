@@ -26,18 +26,26 @@ namespace DiagramFlow.Tests.Services
             var clipboard = new TestSystemClipboard();
             var service = new ClipboardService(clipboard);
 
-            var node1 = new NodeViewModel { Text = "Node1", X = 10, Y = 10 };
+            var node1 = new NodeViewModel 
+            { 
+                Text = "Node1", 
+                X = 10, 
+                Y = 10,
+                ShapeType = DiagramFlow.Models.ShapeType.Diamond
+            };
             var nodes = new List<NodeViewModel> { node1 };
             
             service.Copy(nodes, new List<ConnectorViewModel>());
 
             string json = clipboard.GetText();
             Assert.Contains("Node1", json);
+            // Assert.Contains("Diamond", json); // Serialized as integer '2' by default
             
             // Validate content by deserializing back
             var dto = JsonConvert.DeserializeObject<DiagramFlow.Models.DiagramDto>(json);
             Assert.Single(dto.Nodes);
             Assert.Equal(10.0, dto.Nodes[0].X);
+            Assert.Equal(DiagramFlow.Models.ShapeType.Diamond, dto.Nodes[0].ShapeType);
         }
 
         [Fact]
@@ -74,8 +82,8 @@ namespace DiagramFlow.Tests.Services
             var oldId2 = Guid.NewGuid();
             var json = $@"{{
                 ""Nodes"": [
-                    {{ ""Id"": ""{oldId1}"", ""X"": 0, ""Y"": 0, ""Text"": ""N1"" }},
-                    {{ ""Id"": ""{oldId2}"", ""X"": 100, ""Y"": 0, ""Text"": ""N2"" }}
+                    {{ ""Id"": ""{oldId1}"", ""X"": 0, ""Y"": 0, ""Text"": ""N1"", ""ShapeType"": ""Ellipse"" }},
+                    {{ ""Id"": ""{oldId2}"", ""X"": 100, ""Y"": 0, ""Text"": ""N2"", ""ShapeType"": ""Rectangle"" }}
                 ],
                 ""Connections"": [
                     {{ ""SourceNodeId"": ""{oldId1}"", ""TargetNodeId"": ""{oldId2}"", ""SourcePort"": 0, ""TargetPort"": 1 }}
@@ -94,8 +102,13 @@ namespace DiagramFlow.Tests.Services
             var n2 = result.Nodes.FirstOrDefault(n => n.Text == "N2");
 
             Assert.NotNull(n1);
+            Assert.Equal(DiagramFlow.Models.ShapeType.Ellipse, n1.ShapeType);
+            
             Assert.NotNull(n2);
-            Assert.NotEqual(oldId1, n1.Id); // Should have new ID
+            Assert.Equal(DiagramFlow.Models.ShapeType.Rectangle, n2.ShapeType);
+
+            // Assert new IDs are generated
+            Assert.NotEqual(oldId1, n1.Id);
             Assert.NotEqual(oldId2, n2.Id);
 
             // Check offset: Original local (0,0) -> Base(50,50) since minX=0, minY=0

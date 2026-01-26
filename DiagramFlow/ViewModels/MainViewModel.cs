@@ -5,7 +5,10 @@ using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 using DiagramFlow.Services;
+using DiagramFlow.Models;
+using DiagramFlow.Helpers;
 
 namespace DiagramFlow.ViewModels
 {
@@ -40,10 +43,11 @@ namespace DiagramFlow.ViewModels
 
         public UndoService UndoService { get; } = new UndoService();
         public IClipboardService ClipboardService { get; set; } = new ClipboardService(new SystemClipboardWrapper());
+        public IDiagramPersistenceService PersistenceService { get; set; } = new DiagramPersistenceService();
 
         public MainViewModel()
         {
-            AddNodeCommand = new RelayCommand(_ => AddNode());
+            AddNodeCommand = new RelayCommand(param => AddNode(param));
             DeleteSelectedCommand = new RelayCommand(_ => DeleteSelected());
             UndoCommand = new RelayCommand(_ => UndoService.Undo(), _ => UndoService.CanUndo);
             RedoCommand = new RelayCommand(_ => UndoService.Redo(), _ => UndoService.CanRedo);
@@ -75,13 +79,109 @@ namespace DiagramFlow.ViewModels
             });
         }
 
-        private void AddNode()
+        public void Save(string filePath)
         {
+            var dto = CreateDiagramDto();
+            PersistenceService.Save(dto, filePath);
+        }
+
+        public void Load(string filePath)
+        {
+            var dto = PersistenceService.Load(filePath);
+            if (dto != null)
+            {
+                LoadFromDto(dto);
+            }
+        }
+
+        private DiagramDto CreateDiagramDto()
+        {
+            var dto = new DiagramDto
+            {
+                ZoomLevel = ZoomScale
+            };
+
+            foreach (var node in Nodes)
+            {
+                dto.Nodes.Add(node.ToDto());
+            }
+
+            foreach (var conn in Connectors)
+            {
+                dto.Connections.Add(conn.ToDto());
+            }
+
+            return dto;
+        }
+
+        private void LoadFromDto(DiagramDto dto)
+        {
+            Nodes.Clear();
+            Connectors.Clear();
+            SelectedNodes.Clear();
+            SelectedConnectors.Clear();
+
+            var nodeMap = new Dictionary<Guid, NodeViewModel>();
+
+            foreach (var nodeDto in dto.Nodes)
+            {
+                var node = new NodeViewModel
+                {
+                    Id = nodeDto.Id,
+                    X = nodeDto.X,
+                    Y = nodeDto.Y,
+                    Width = nodeDto.Width,
+                    Height = nodeDto.Height,
+                    Text = nodeDto.Text,
+                    ShapeType = nodeDto.ShapeType
+                };
+
+                if (!string.IsNullOrEmpty(nodeDto.Color))
+                {
+                    try
+                    {
+                        var color = (Color)ColorConverter.ConvertFromString(nodeDto.Color);
+                        node.Background = new SolidColorBrush(color);
+                    }
+                    catch { }
+                }
+
+                Nodes.Add(node);
+                nodeMap[node.Id] = node;
+            }
+
+            foreach (var connDto in dto.Connections)
+            {
+                if (nodeMap.TryGetValue(connDto.SourceNodeId, out var sourceNode) &&
+                    nodeMap.TryGetValue(connDto.TargetNodeId, out var targetNode))
+                {
+                    var connector = new ConnectorViewModel(
+                        sourceNode, connDto.SourcePort,
+                        targetNode, connDto.TargetPort)
+                    {
+                        Id = connDto.Id
+                    };
+                    Connectors.Add(connector);
+                }
+            }
+
+            ZoomScale = dto.ZoomLevel > 0 ? dto.ZoomLevel : 1.0;
+        }
+
+        private void AddNode(object parameter)
+        {
+            Models.ShapeType shapeType = Models.ShapeType.Rectangle;
+            if (parameter is string typeStr && Enum.TryParse(typeStr, out Models.ShapeType parsed))
+            {
+                shapeType = parsed;
+            }
+
             var node = new NodeViewModel
             {
                 X = 100 + (Nodes.Count * 20),
                 Y = 100 + (Nodes.Count * 20),
-                Text = $"Node {Nodes.Count + 1}"
+                Text = $"Node {Nodes.Count + 1}",
+                ShapeType = shapeType
             };
             // Use UndoService
             UndoService.Execute(new AddNodeCommand(this, node));

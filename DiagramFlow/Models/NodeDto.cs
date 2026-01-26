@@ -11,5 +11,6 @@ namespace DiagramFlow.Models
         public double Height { get; set; }
         public string Text { get; set; }
         public string Color { get; set; }
+        public ShapeType ShapeType { get; set; } = ShapeType.Rectangle;
     }
 }
