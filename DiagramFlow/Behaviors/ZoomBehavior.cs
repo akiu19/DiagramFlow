@@ -38,6 +38,10 @@ namespace DiagramFlow.Behaviors
             // If the change is from an external source (like the slider), zoom to viewport center
             if (ScrollViewer != null && Math.Abs(oldValue - newValue) > 0.0001)
             {
+                // Ensure viewport has valid dimensions before calculating center
+                if (ScrollViewer.ViewportWidth <= 0 || ScrollViewer.ViewportHeight <= 0)
+                    return;
+
                 // Get the center point of the viewport in ScrollViewer coordinates
                 // This is the point in the viewport that we want to keep fixed during zoom
                 // For slider zoom, we keep the viewport center fixed, making the zoom feel centered
@@ -107,7 +111,8 @@ namespace DiagramFlow.Behaviors
             }
             else
             {
-                // ZoomScale is already set to targetScale by the slider binding, so we don't need to set it again
+                // For non-animated zoom, just update scroll offsets
+                // Note: ZoomScale is already at targetScale (updated by caller or binding)
                 ScrollViewer.UpdateLayout();
                 ScrollViewer.ScrollToHorizontalOffset(targetHorizontalOffset);
                 ScrollViewer.ScrollToVerticalOffset(targetVerticalOffset);
