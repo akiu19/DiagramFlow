@@ -38,14 +38,79 @@ namespace DiagramFlow.Behaviors
             // If the change is from an external source (like the slider), zoom to viewport center
             if (ScrollViewer != null && Math.Abs(oldValue - newValue) > 0.0001)
             {
-                // Get the center point of the viewport
+                // Get the center point of the viewport in ScrollViewer coordinates
+                // This is the point in the viewport that we want to keep fixed during zoom
+                // For slider zoom, we keep the viewport center fixed, making the zoom feel centered
                 Point centerPoint = new Point(
                     ScrollViewer.ViewportWidth / 2,
                     ScrollViewer.ViewportHeight / 2
                 );
                 
-                // Apply zoom centered on viewport
-                ZoomToPoint(newValue, centerPoint, false);
+                // Apply zoom with the viewport center as the anchor point
+                // Pass oldValue as the starting scale since ZoomScale has already been updated to newValue
+                ZoomToPointFromScale(oldValue, newValue, centerPoint, false);
+            }
+        }
+
+        private void ZoomToPointFromScale(double startScale, double targetScale, Point centerPoint, bool animate)
+        {
+            if (ScrollViewer == null) return;
+
+            double startHorizontalOffset = ScrollViewer.HorizontalOffset;
+            double startVerticalOffset = ScrollViewer.VerticalOffset;
+
+            // Current content point under center
+            Point contentPoint = new Point(
+                (startHorizontalOffset + centerPoint.X) / startScale,
+                (startVerticalOffset + centerPoint.Y) / startScale
+            );
+
+            // Calculate offsets for target scale to keep contentPoint at center
+            double targetHorizontalOffset = contentPoint.X * targetScale - (ScrollViewer.ViewportWidth / 2);
+            double targetVerticalOffset = contentPoint.Y * targetScale - (ScrollViewer.ViewportHeight / 2);
+
+            if (animate)
+            {
+                var animation = new DoubleAnimation
+                {
+                    From = 0.0,
+                    To = 1.0,
+                    Duration = TimeSpan.FromMilliseconds(300),
+                    EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+                };
+
+                var clock = animation.CreateClock();
+                clock.CurrentTimeInvalidated += (s, e) =>
+                {
+                    if (ScrollViewer == null)
+                    {
+                        clock.Controller.Stop();
+                        return;
+                    }
+
+                    double progress = clock.CurrentProgress ?? 0.0;
+                    IEasingFunction easing = animation.EasingFunction;
+                    double easedProgress = easing != null ? easing.Ease(progress) : progress;
+
+                    double currentScale = startScale + (targetScale - startScale) * easedProgress;
+                    double currentH = startHorizontalOffset + (targetHorizontalOffset - startHorizontalOffset) * easedProgress;
+                    double currentV = startVerticalOffset + (targetVerticalOffset - startVerticalOffset) * easedProgress;
+
+                    _isInternalZoomChange = true;
+                    ZoomScale = currentScale;
+                    _isInternalZoomChange = false;
+                    ScrollViewer.UpdateLayout();
+                    ScrollViewer.ScrollToHorizontalOffset(currentH);
+                    ScrollViewer.ScrollToVerticalOffset(currentV);
+                };
+                clock.Controller.Begin();
+            }
+            else
+            {
+                // ZoomScale is already set to targetScale by the slider binding, so we don't need to set it again
+                ScrollViewer.UpdateLayout();
+                ScrollViewer.ScrollToHorizontalOffset(targetHorizontalOffset);
+                ScrollViewer.ScrollToVerticalOffset(targetVerticalOffset);
             }
         }
 
