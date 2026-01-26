@@ -16,7 +16,7 @@ namespace DiagramFlow.Tests.Services
             
             var command = new MoveNodesCommand(nodes, 5, 5);
 
-            // Execute
+            // 実行
             command.Execute();
             
             Assert.Equal(15, node1.X);
@@ -24,7 +24,7 @@ namespace DiagramFlow.Tests.Services
             Assert.Equal(25, node2.X);
             Assert.Equal(25, node2.Y);
 
-            // Undo
+            // 元に戻す
             command.Undo();
 
             Assert.Equal(10, node1.X);
@@ -39,13 +39,13 @@ namespace DiagramFlow.Tests.Services
             var node = new NodeViewModel { Width = 100, Height = 100 };
             var command = new ResizeNodeCommand(node, 100, 100, 150, 200);
 
-            // Execute
+            // 実行
             command.Execute();
 
             Assert.Equal(150, node.Width);
             Assert.Equal(200, node.Height);
 
-            // Undo
+            // 元に戻す
             command.Undo();
 
             Assert.Equal(100, node.Width);
@@ -58,12 +58,12 @@ namespace DiagramFlow.Tests.Services
             var node = new NodeViewModel { Text = "Old" };
             var command = new EditTextCommand(node, "Old", "New");
 
-            // Execute
+            // 実行
             command.Execute();
 
             Assert.Equal("New", node.Text);
 
-            // Undo
+            // 元に戻す
             command.Undo();
 
             Assert.Equal("Old", node.Text);
@@ -73,7 +73,7 @@ namespace DiagramFlow.Tests.Services
         public void AddItemsCommand_ShouldAddNodesAndConnectors_AndUndo()
         {
             var vm = new MainViewModel();
-            vm.Nodes.Clear(); // Start empty
+            vm.Nodes.Clear(); // 空から始める
             
             var node1 = new NodeViewModel { Text = "N1" };
             var node2 = new NodeViewModel { Text = "N2" };
@@ -84,18 +84,18 @@ namespace DiagramFlow.Tests.Services
 
             var command = new AddItemsCommand(vm, nodes, connectors);
 
-            // Execute
+            // 実行
             command.Execute();
 
             Assert.Contains(node1, vm.Nodes);
             Assert.Contains(node2, vm.Nodes);
             Assert.Contains(connector, vm.Connectors);
             
-            // Should select added items
+            // 追加されたアイテムが選択されるべき
             Assert.Contains(node1, vm.SelectedNodes);
             Assert.Contains(connector, vm.SelectedConnectors);
 
-            // Undo
+            // 元に戻す
             command.Undo();
 
             Assert.DoesNotContain(node1, vm.Nodes);
@@ -112,7 +112,7 @@ namespace DiagramFlow.Tests.Services
             
             var node1 = new NodeViewModel { Text = "N1" };
             vm.Nodes.Add(node1);
-            var connector = new ConnectorViewModel(node1, 0, null, 0); // Dangling for test simplicity or valid
+            var connector = new ConnectorViewModel(node1, 0, null, 0); // テストの簡単のため、または有効なダングリング
             vm.Connectors.Add(connector);
 
             var nodesToDelete = new List<NodeViewModel> { node1 };
@@ -120,13 +120,13 @@ namespace DiagramFlow.Tests.Services
 
             var command = new DeleteItemsCommand(vm, nodesToDelete, connectorsToDelete);
 
-            // Execute
+            // 実行
             command.Execute();
 
             Assert.DoesNotContain(node1, vm.Nodes);
             Assert.DoesNotContain(connector, vm.Connectors);
 
-            // Undo
+            // 元に戻す
             command.Undo();
 
             Assert.Contains(node1, vm.Nodes);

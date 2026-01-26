@@ -16,12 +16,12 @@ namespace DiagramFlow.ViewModels
         public Guid Id { get; set; } = Guid.NewGuid();
 
         public NodeViewModel SourceNode { get; set; }
-        public int SourcePort { get; set; } // 0=Top, 1=Bottom, 2=Left, 3=Right
+        public int SourcePort { get; set; } // 0=上, 1=下, 2=左, 3=右
 
         public NodeViewModel TargetNode { get; set; }
         public int TargetPort { get; set; }
 
-        // Calculated line coordinates
+        // 計算された線の座標
         private double _x1;
         public double X1
         {
@@ -64,7 +64,7 @@ namespace DiagramFlow.ViewModels
             TargetNode = target;
             TargetPort = targetPort;
 
-            // Subscribe to position changes to update line coordinates
+            // 位置変更を購読して線の座標を更新
             if (SourceNode != null)
             {
                 SourceNode.PropertyChanged += SourceNode_PropertyChanged;

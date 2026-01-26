@@ -25,7 +25,7 @@ namespace DiagramFlow.Tests.ViewModels
         {
             var node = new NodeViewModel();
             
-            // Try setting below min
+            // 最小値を下回る値を設定しようとする
             node.Width = 10;
             node.Height = 10;
 
@@ -44,11 +44,11 @@ namespace DiagramFlow.Tests.ViewModels
                 Height = 100
             };
 
-            // Assuming GetPortPosition logic: 
-            // 0: Top (50, 0) relative -> (150, 100) abs
-            // 1: Bottom (50, 100) relative -> (150, 200) abs
-            // 2: Left (0, 50) relative -> (100, 150) abs
-            // 3: Right (100, 50) relative -> (200, 150) abs
+            // GetPortPositionロジックを想定: 
+            // 0: 上 (50, 0) 相対 -> (150, 100) 絶対
+            // 1: 下 (50, 100) 相対 -> (150, 200) 絶対
+            // 2: 左 (0, 50) 相対 -> (100, 150) 絶対
+            // 3: 右 (100, 50) 相対 -> (200, 150) 絶対
 
             var top = node.GetPortPosition(0);
             Assert.Equal(150, top.X);

@@ -26,13 +26,13 @@ namespace DiagramFlow.Services
 
             var dto = new DiagramDto();
 
-            // Add selected nodes
+            // 選択されたノードを追加
             foreach (var node in nodesList)
             {
                 dto.Nodes.Add(node.ToDto());
             }
 
-            // Add connections if both ends are in the selection
+            // 両端が選択範囲内にある場合、接続を追加
             if (allConnectors != null)
             {
                 foreach (var conn in allConnectors)
@@ -63,14 +63,14 @@ namespace DiagramFlow.Services
                 var dto = JsonConvert.DeserializeObject<DiagramDto>(json);
                 if (dto == null || !dto.Nodes.Any()) return result;
 
-                // Determine offset to place pasted items at basePosition (top-left aligned)
+                // 貼り付けるアイテムをbasePositionに配置するためのオフセットを決定 (左上揃え)
                 double minX = dto.Nodes.Min(n => n.X);
                 double minY = dto.Nodes.Min(n => n.Y);
 
                 double offsetX = basePosition.X - minX;
                 double offsetY = basePosition.Y - minY;
 
-                // Mapping from Old IDs to New ViewModels
+                // 古いIDから新しいViewModelへのマッピング
                 var idMap = new Dictionary<Guid, NodeViewModel>();
 
                 foreach (var nodeDto in dto.Nodes)
@@ -85,7 +85,7 @@ namespace DiagramFlow.Services
                         ShapeType = nodeDto.ShapeType
                     };
 
-                    // Preserve color
+                    // 色を保持
                     if (!string.IsNullOrEmpty(nodeDto.Color))
                     {
                         try
@@ -114,8 +114,8 @@ namespace DiagramFlow.Services
             }
             catch (Exception)
             {
-                // Ignore invalid clipboard content
-                // In a real app we might want to log this
+                // 無効なクリップボードの内容を無視
+                // 実際のアプリではログに記録することもできます
             }
 
             return result;

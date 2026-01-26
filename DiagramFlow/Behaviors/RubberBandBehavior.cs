@@ -49,19 +49,19 @@ namespace DiagramFlow.Behaviors
 
         private void OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            // If another operation is active (captured), don't start.
-            // Or if e.Source is not Canvas (e.g. clicked on an item), don't start.
-            // But Items usually handle their own events.
-            // If e.Handled is true, do nothing.
+            // 別の操作がアクティブ (キャプチャされている) 場合は開始しません。
+            // または、e.Sourceがキャンバスではない場合 (例: アイテムをクリックした) は開始しません。
+            // しかし、アイテムは通常、独自のイベントを処理します。
+            // e.Handledがtrueの場合は何もしません。
             if (e.Handled) return;
             
-            // Should check if we are clicking on an item? 
-            // If the strict `e.OriginalSource == AssociatedObject` check is used, it might fail if we click on background grid lines etc.
-            // But generally for Canvas background, OriginalSource is the Canvas or Grid.
+            // アイテムをクリックしているかどうかを確認する必要がありますか？
+            // 厳密な `e.OriginalSource == AssociatedObject` チェックを使用すると、背景のグリッド線などをクリックした場合に失敗する可能性があります。
+            // しかし、一般的にキャンバスの背景では、OriginalSourceはCanvasまたはGridです。
             
-            // MainWindow logic was: if (_currentState != OperationState.Idle) return;
-            // Behavior doesn't know about global state easily. 
-            // But usually MouseCapture prevents other events.
+            // MainWindowのロジックは: if (_currentState != OperationState.Idle) return;
+            // ビヘイビアはグローバルな状態を簡単に知ることができません。
+            // しかし、通常はMouseCaptureが他のイベントを防ぎます。
 
             MainViewModel?.ClearSelection();
 
@@ -110,7 +110,7 @@ namespace DiagramFlow.Behaviors
                     ProcessSelection();
                 }
 
-                e.Handled = false; // Allow others? No, we handled the selection action.
+                e.Handled = false; // 他の人に許可しますか？ いいえ、選択アクションを処理しました。
             }
         }
 
