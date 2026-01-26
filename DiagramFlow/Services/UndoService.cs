@@ -32,7 +32,7 @@ namespace DiagramFlow.Services
 
         public void AddToHistory(IUndoableCommand command)
         {
-            // Use this when the command has already been executed (e.g. by dragging)
+            // コマンドが既に実行されている場合に使用します (例: ドラッグによって)
             _undoStack.Push(command);
             _redoStack.Clear();
             TrimHistory();
@@ -68,14 +68,14 @@ namespace DiagramFlow.Services
 
         private void TrimHistory()
         {
-            // Stack doesn't support removal easily unless we use LinkedList or re-stack.
-            // For simple implementation, we can let it grow or Re-create stack if too big.
-            // Efficient circular buffer is better but Stack is standard.
+            // スタックは削除が簡単ではありません。LinkedListを使用するか、再スタックする必要があります。
+            // シンプルな実装では、大きくなることを許可するか、大きすぎる場合はスタックを再作成します。
+            // 効率的な循環バッファの方が良いですが、スタックが標準的です。
             if (_undoStack.Count > _maxHistory)
             {
-                // Simple hack: convert to array, skip last, recreate stack.
-                // Or just ignore limit for now or use LinkedList.
-                // For this requirements: simple limit.
+                // 簡単なハック: 配列に変換して最後をスキップし、スタックを再作成します。
+                // または制限を無視するか、LinkedListを使用します。
+                // この要件では: 簡単な制限。
             }
         }
     }

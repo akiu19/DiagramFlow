@@ -22,11 +22,11 @@ namespace DiagramFlow.ViewModels
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
-        // Node and Connector collections
+        // ノードとコネクタのコレクション
         public ObservableCollection<NodeViewModel> Nodes { get; } = new ObservableCollection<NodeViewModel>();
         public ObservableCollection<ConnectorViewModel> Connectors { get; } = new ObservableCollection<ConnectorViewModel>();
 
-        // Zoom control (range: 0.1 to 4.0)
+        // ズーム制御 (範囲: 0.1 から 4.0)
         private double _zoomScale = 1.0;
         public double ZoomScale
         {
@@ -41,12 +41,12 @@ namespace DiagramFlow.ViewModels
             }
         }
 
-        // Selected nodes
+        // 選択されたノード
         public ObservableCollection<NodeViewModel> SelectedNodes { get; } = new ObservableCollection<NodeViewModel>();
-        // Selected connectors
+        // 選択されたコネクタ
         public ObservableCollection<ConnectorViewModel> SelectedConnectors { get; } = new ObservableCollection<ConnectorViewModel>();
 
-        // Commands
+        // コマンド
         public ICommand AddNodeCommand { get; }
         public ICommand DeleteSelectedCommand { get; }
         public ICommand UndoCommand { get; }
@@ -72,7 +72,7 @@ namespace DiagramFlow.ViewModels
                 System.Windows.Input.CommandManager.InvalidateRequerySuggested();
             };
 
-            // Add sample nodes for testing
+            // テスト用にサンプルノードを追加
             Nodes.Add(new NodeViewModel
             {
                 X = 200,
@@ -196,7 +196,7 @@ namespace DiagramFlow.ViewModels
                 Text = $"Node {Nodes.Count + 1}",
                 ShapeType = shapeType
             };
-            // Use UndoService
+            // UndoServiceを使用
             UndoService.Execute(new AddNodeCommand(this, node));
         }
 

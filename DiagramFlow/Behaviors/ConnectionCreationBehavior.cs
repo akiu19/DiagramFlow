@@ -54,7 +54,7 @@ namespace DiagramFlow.Behaviors
         {
             if (e.Handled) return;
 
-            // Check if clicked on a Port (Ellipse with Tag)
+            // ポート (タグ付きEllipse) がクリックされたかどうかを確認
             if (e.OriginalSource is Ellipse port && port.Tag != null)
             {
                 var node = VisualHelper.FindParentDataContext<NodeViewModel>(port);
@@ -108,7 +108,7 @@ namespace DiagramFlow.Behaviors
 
                 if (targetNode != null && MainViewModel != null)
                 {
-                    // Create connection
+                    // 接続を作成
                     var connector = new ConnectorViewModel(
                         _sourceNode, _sourcePort,
                         targetNode, targetPort);
@@ -128,7 +128,7 @@ namespace DiagramFlow.Behaviors
 
             foreach (var node in MainViewModel.Nodes)
             {
-                // Check if point is near any port
+                // ポイントが任意のポートの近くにあるかどうかを確認
                 for (int port = 0; port < 4; port++)
                 {
                     var portPos = node.GetPortPosition(port);
@@ -136,7 +136,7 @@ namespace DiagramFlow.Behaviors
                         Math.Pow(point.X - portPos.X, 2) +
                         Math.Pow(point.Y - portPos.Y, 2));
 
-                    if (distance < 15) // Tolerance of 15 pixels
+                    if (distance < 15) // 15ピクセルの許容範囲
                     {
                         return (node, port);
                     }
