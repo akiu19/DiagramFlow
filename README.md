@@ -1,4 +1,4 @@
-﻿# DiagramFlow
+# DiagramFlow
 
 DiagramFlowは、ノードと接続（コネクション）を使用してフロー図を作成、編集、管理できるWPFベースの図形編集アプリケーションです。
 
@@ -55,7 +55,3 @@ DiagramFlowは、ノードと接続（コネクション）を使用してフロ
   - `Ctrl + C`: コピー
   - `Ctrl + V`: 貼り付け
   - `Delete`: 選択したアイテム（ノードまたは接続）の削除
-
-## ライセンス
-
-[MIT License](LICENSE)
