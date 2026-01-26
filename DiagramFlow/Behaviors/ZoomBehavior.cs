@@ -10,14 +10,43 @@ namespace DiagramFlow.Behaviors
 {
     public class ZoomBehavior : Behavior<FrameworkElement>
     {
+        private bool _isInternalZoomChange = false;
+
         public static readonly DependencyProperty ZoomScaleProperty =
             DependencyProperty.Register("ZoomScale", typeof(double), typeof(ZoomBehavior),
-                new FrameworkPropertyMetadata(1.0, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
+                new FrameworkPropertyMetadata(1.0, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnZoomScaleChanged));
 
         public double ZoomScale
         {
             get { return (double)GetValue(ZoomScaleProperty); }
             set { SetValue(ZoomScaleProperty, value); }
+        }
+
+        private static void OnZoomScaleChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is ZoomBehavior behavior)
+            {
+                behavior.HandleZoomScaleChanged((double)e.OldValue, (double)e.NewValue);
+            }
+        }
+
+        private void HandleZoomScaleChanged(double oldValue, double newValue)
+        {
+            // If the change is from our own ZoomToPoint method, don't process it again
+            if (_isInternalZoomChange) return;
+            
+            // If the change is from an external source (like the slider), zoom to viewport center
+            if (ScrollViewer != null && Math.Abs(oldValue - newValue) > 0.0001)
+            {
+                // Get the center point of the viewport
+                Point centerPoint = new Point(
+                    ScrollViewer.ViewportWidth / 2,
+                    ScrollViewer.ViewportHeight / 2
+                );
+                
+                // Apply zoom centered on viewport
+                ZoomToPoint(newValue, centerPoint, false);
+            }
         }
 
         public static readonly DependencyProperty ScrollViewerProperty =
@@ -164,7 +193,9 @@ namespace DiagramFlow.Behaviors
                     double currentH = startHorizontalOffset + (targetHorizontalOffset - startHorizontalOffset) * easedProgress;
                     double currentV = startVerticalOffset + (targetVerticalOffset - startVerticalOffset) * easedProgress;
 
+                    _isInternalZoomChange = true;
                     ZoomScale = currentScale;
+                    _isInternalZoomChange = false;
                     ScrollViewer.UpdateLayout(); 
                     ScrollViewer.ScrollToHorizontalOffset(currentH);
                     ScrollViewer.ScrollToVerticalOffset(currentV);
@@ -173,7 +204,9 @@ namespace DiagramFlow.Behaviors
             }
             else
             {
+                _isInternalZoomChange = true;
                 ZoomScale = targetScale;
+                _isInternalZoomChange = false;
                 ScrollViewer.UpdateLayout();
                 ScrollViewer.ScrollToHorizontalOffset(targetHorizontalOffset);
                 ScrollViewer.ScrollToVerticalOffset(targetVerticalOffset);
