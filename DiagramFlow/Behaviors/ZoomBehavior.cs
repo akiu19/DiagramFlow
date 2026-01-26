@@ -11,6 +11,10 @@ namespace DiagramFlow.Behaviors
     public class ZoomBehavior : Behavior<FrameworkElement>
     {
         private bool _isInternalZoomChange = false;
+        private double _lastProcessedScale = 1.0;
+        private double _pendingHorizontalOffset = 0;
+        private double _pendingVerticalOffset = 0;
+        private bool _hasPendingOffset = false;
 
         public static readonly DependencyProperty ZoomScaleProperty =
             DependencyProperty.Register("ZoomScale", typeof(double), typeof(ZoomBehavior),
@@ -52,7 +56,8 @@ namespace DiagramFlow.Behaviors
                 
                 // Apply zoom with the viewport center as the anchor point
                 // Pass oldValue as the starting scale since ZoomScale has already been updated to newValue
-                ZoomToPointFromScale(oldValue, newValue, centerPoint, false);
+                // Use _lastProcessedScale and pending offsets for proper calculation during rapid changes
+                ZoomToPointFromScale(_hasPendingOffset ? _lastProcessedScale : oldValue, newValue, centerPoint, false);
             }
         }
 
@@ -60,8 +65,9 @@ namespace DiagramFlow.Behaviors
         {
             if (ScrollViewer == null) return;
 
-            double startHorizontalOffset = ScrollViewer.HorizontalOffset;
-            double startVerticalOffset = ScrollViewer.VerticalOffset;
+            // Use pending offsets if available (for rapid slider changes), otherwise use current offsets
+            double startHorizontalOffset = _hasPendingOffset ? _pendingHorizontalOffset : ScrollViewer.HorizontalOffset;
+            double startVerticalOffset = _hasPendingOffset ? _pendingVerticalOffset : ScrollViewer.VerticalOffset;
 
             // Current content point under center
             Point contentPoint = new Point(
@@ -72,6 +78,12 @@ namespace DiagramFlow.Behaviors
             // Calculate offsets for target scale to keep contentPoint at center
             double targetHorizontalOffset = contentPoint.X * targetScale - (ScrollViewer.ViewportWidth / 2);
             double targetVerticalOffset = contentPoint.Y * targetScale - (ScrollViewer.ViewportHeight / 2);
+
+            // Store the pending offsets and scale for the next rapid change
+            _pendingHorizontalOffset = targetHorizontalOffset;
+            _pendingVerticalOffset = targetVerticalOffset;
+            _lastProcessedScale = targetScale;
+            _hasPendingOffset = true;
 
             if (animate)
             {
@@ -106,6 +118,12 @@ namespace DiagramFlow.Behaviors
                     ScrollViewer.UpdateLayout();
                     ScrollViewer.ScrollToHorizontalOffset(currentH);
                     ScrollViewer.ScrollToVerticalOffset(currentV);
+                    
+                    // Clear pending flag when animation completes
+                    if (progress >= 1.0)
+                    {
+                        _hasPendingOffset = false;
+                    }
                 };
                 clock.Controller.Begin();
             }
@@ -116,6 +134,9 @@ namespace DiagramFlow.Behaviors
                 ScrollViewer.UpdateLayout();
                 ScrollViewer.ScrollToHorizontalOffset(targetHorizontalOffset);
                 ScrollViewer.ScrollToVerticalOffset(targetVerticalOffset);
+                
+                // Clear pending flag after immediate update
+                _hasPendingOffset = false;
             }
         }
 
