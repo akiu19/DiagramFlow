@@ -63,54 +63,78 @@ namespace DiagramFlow.Behaviors
             // Behavior doesn't know about global state easily. 
             // But usually MouseCapture prevents other events.
 
-            MainViewModel?.ClearSelection();
-
-            _isSelecting = true;
+            // Don't clear selection here - let ProcessSelection handle it based on modifier keys
+            
+            try
+            {
+                _isSelecting = true;
             _startPoint = e.GetPosition(AssociatedObject);
 
-            if (SelectionRectangle != null)
-            {
-                SelectionRectangle.Visibility = Visibility.Visible;
-                SelectionRectangle.Width = 0;
-                SelectionRectangle.Height = 0;
-                Canvas.SetLeft(SelectionRectangle, _startPoint.X);
-                Canvas.SetTop(SelectionRectangle, _startPoint.Y);
-            }
+                if (SelectionRectangle != null)
+                {
+                    SelectionRectangle.Visibility = Visibility.Visible;
+                    SelectionRectangle.Width = 0;
+                    SelectionRectangle.Height = 0;
+                    Canvas.SetLeft(SelectionRectangle, _startPoint.X);
+                    Canvas.SetTop(SelectionRectangle, _startPoint.Y);
+                }
 
-            AssociatedObject.CaptureMouse();
-            e.Handled = true;
+                AssociatedObject.CaptureMouse();
+                e.Handled = true;
+            }
+            catch (Exception)
+            {
+                // Catch all exceptions to ensure mouse capture is always released.
+                // This prevents the mouse from being left in a captured state.
+                CleanupSelection();
+                throw;
+            }
         }
 
         private void OnMouseMove(object sender, MouseEventArgs e)
         {
             if (!_isSelecting || SelectionRectangle == null) return;
 
-            Point currentPos = e.GetPosition(AssociatedObject);
-            double x = Math.Min(_startPoint.X, currentPos.X);
-            double y = Math.Min(_startPoint.Y, currentPos.Y);
-            double width = Math.Abs(currentPos.X - _startPoint.X);
-            double height = Math.Abs(currentPos.Y - _startPoint.Y);
+            try
+            {
+                Point currentPos = e.GetPosition(AssociatedObject);
+                double x = Math.Min(_startPoint.X, currentPos.X);
+                double y = Math.Min(_startPoint.Y, currentPos.Y);
+                double width = Math.Abs(currentPos.X - _startPoint.X);
+                double height = Math.Abs(currentPos.Y - _startPoint.Y);
 
-            Canvas.SetLeft(SelectionRectangle, x);
-            Canvas.SetTop(SelectionRectangle, y);
-            SelectionRectangle.Width = width;
-            SelectionRectangle.Height = height;
+                Canvas.SetLeft(SelectionRectangle, x);
+                Canvas.SetTop(SelectionRectangle, y);
+                SelectionRectangle.Width = width;
+                SelectionRectangle.Height = height;
+            }
+            catch (Exception)
+            {
+                // Catch all exceptions to ensure mouse capture is always released.
+                // This prevents the mouse from being left in a captured state.
+                CleanupSelection();
+                throw;
+            }
         }
 
         private void OnMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
             if (_isSelecting)
             {
-                _isSelecting = false;
-                AssociatedObject.ReleaseMouseCapture();
-
-                if (SelectionRectangle != null)
+                try
                 {
-                    SelectionRectangle.Visibility = Visibility.Collapsed;
-                    ProcessSelection();
+                    if (SelectionRectangle != null)
+                    {
+                        ProcessSelection();
+                    }
                 }
-
-                e.Handled = false; // Allow others? No, we handled the selection action.
+                finally
+                {
+                    // Always clean up, even if an exception occurs
+                    CleanupSelection();
+                }
+                
+                e.Handled = true;
             }
         }
 
@@ -139,6 +163,21 @@ namespace DiagramFlow.Behaviors
                         MainViewModel.SelectNode(node, true);
                     }
                 }
+            }
+        }
+
+        private void CleanupSelection()
+        {
+            _isSelecting = false;
+            
+            if (AssociatedObject != null && AssociatedObject.IsMouseCaptured)
+            {
+                AssociatedObject.ReleaseMouseCapture();
+            }
+
+            if (SelectionRectangle != null)
+            {
+                SelectionRectangle.Visibility = Visibility.Collapsed;
             }
         }
     }
