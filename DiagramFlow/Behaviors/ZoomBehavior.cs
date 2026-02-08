@@ -10,14 +10,134 @@ namespace DiagramFlow.Behaviors
 {
     public class ZoomBehavior : Behavior<FrameworkElement>
     {
+        private bool _isInternalZoomChange = false;
+        private double _lastProcessedScale = 1.0;
+        private double _pendingHorizontalOffset = 0;
+        private double _pendingVerticalOffset = 0;
+        private bool _hasPendingOffset = false;
+
         public static readonly DependencyProperty ZoomScaleProperty =
             DependencyProperty.Register("ZoomScale", typeof(double), typeof(ZoomBehavior),
-                new FrameworkPropertyMetadata(1.0, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault));
+                new FrameworkPropertyMetadata(1.0, FrameworkPropertyMetadataOptions.BindsTwoWayByDefault, OnZoomScaleChanged));
 
         public double ZoomScale
         {
             get { return (double)GetValue(ZoomScaleProperty); }
             set { SetValue(ZoomScaleProperty, value); }
+        }
+
+        private static void OnZoomScaleChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is ZoomBehavior behavior)
+            {
+                behavior.HandleZoomScaleChanged((double)e.OldValue, (double)e.NewValue);
+            }
+        }
+
+        private void HandleZoomScaleChanged(double oldValue, double newValue)
+        {
+            // If the change is from our own ZoomToPoint method, don't process it again
+            if (_isInternalZoomChange) return;
+            
+            // If the change is from an external source (like the slider), zoom to viewport center
+            if (ScrollViewer != null && Math.Abs(oldValue - newValue) > 0.0001)
+            {
+                // Ensure viewport has valid dimensions before calculating center
+                if (ScrollViewer.ViewportWidth <= 0 || ScrollViewer.ViewportHeight <= 0)
+                    return;
+
+                // Get the center point of the viewport in ScrollViewer coordinates
+                // This is the point in the viewport that we want to keep fixed during zoom
+                // For slider zoom, we keep the viewport center fixed, making the zoom feel centered
+                Point centerPoint = new Point(
+                    ScrollViewer.ViewportWidth / 2,
+                    ScrollViewer.ViewportHeight / 2
+                );
+                
+                // Apply zoom with the viewport center as the anchor point
+                // Pass oldValue as the starting scale since ZoomScale has already been updated to newValue
+                // Use _lastProcessedScale and pending offsets for proper calculation during rapid changes
+                ZoomToPointFromScale(_hasPendingOffset ? _lastProcessedScale : oldValue, newValue, centerPoint, false);
+            }
+        }
+
+        private void ZoomToPointFromScale(double startScale, double targetScale, Point centerPoint, bool animate)
+        {
+            if (ScrollViewer == null) return;
+
+            // Use pending offsets if available (for rapid slider changes), otherwise use current offsets
+            double startHorizontalOffset = _hasPendingOffset ? _pendingHorizontalOffset : ScrollViewer.HorizontalOffset;
+            double startVerticalOffset = _hasPendingOffset ? _pendingVerticalOffset : ScrollViewer.VerticalOffset;
+
+            // Current content point under center
+            Point contentPoint = new Point(
+                (startHorizontalOffset + centerPoint.X) / startScale,
+                (startVerticalOffset + centerPoint.Y) / startScale
+            );
+
+            // Calculate offsets for target scale to keep contentPoint at center
+            double targetHorizontalOffset = contentPoint.X * targetScale - (ScrollViewer.ViewportWidth / 2);
+            double targetVerticalOffset = contentPoint.Y * targetScale - (ScrollViewer.ViewportHeight / 2);
+
+            // Store the pending offsets and scale for the next rapid change
+            _pendingHorizontalOffset = targetHorizontalOffset;
+            _pendingVerticalOffset = targetVerticalOffset;
+            _lastProcessedScale = targetScale;
+            _hasPendingOffset = true;
+
+            if (animate)
+            {
+                var animation = new DoubleAnimation
+                {
+                    From = 0.0,
+                    To = 1.0,
+                    Duration = TimeSpan.FromMilliseconds(300),
+                    EasingFunction = new QuadraticEase { EasingMode = EasingMode.EaseOut }
+                };
+
+                var clock = animation.CreateClock();
+                clock.CurrentTimeInvalidated += (s, e) =>
+                {
+                    if (ScrollViewer == null)
+                    {
+                        clock.Controller.Stop();
+                        return;
+                    }
+
+                    double progress = clock.CurrentProgress ?? 0.0;
+                    IEasingFunction easing = animation.EasingFunction;
+                    double easedProgress = easing != null ? easing.Ease(progress) : progress;
+
+                    double currentScale = startScale + (targetScale - startScale) * easedProgress;
+                    double currentH = startHorizontalOffset + (targetHorizontalOffset - startHorizontalOffset) * easedProgress;
+                    double currentV = startVerticalOffset + (targetVerticalOffset - startVerticalOffset) * easedProgress;
+
+                    _isInternalZoomChange = true;
+                    ZoomScale = currentScale;
+                    _isInternalZoomChange = false;
+                    ScrollViewer.UpdateLayout();
+                    ScrollViewer.ScrollToHorizontalOffset(currentH);
+                    ScrollViewer.ScrollToVerticalOffset(currentV);
+                    
+                    // Clear pending flag when animation completes
+                    if (progress >= 1.0)
+                    {
+                        _hasPendingOffset = false;
+                    }
+                };
+                clock.Controller.Begin();
+            }
+            else
+            {
+                // For non-animated zoom, just update scroll offsets
+                // Note: ZoomScale is already at targetScale (updated by caller or binding)
+                ScrollViewer.UpdateLayout();
+                ScrollViewer.ScrollToHorizontalOffset(targetHorizontalOffset);
+                ScrollViewer.ScrollToVerticalOffset(targetVerticalOffset);
+                
+                // Clear pending flag after immediate update
+                _hasPendingOffset = false;
+            }
         }
 
         public static readonly DependencyProperty ScrollViewerProperty =
@@ -164,7 +284,9 @@ namespace DiagramFlow.Behaviors
                     double currentH = startHorizontalOffset + (targetHorizontalOffset - startHorizontalOffset) * easedProgress;
                     double currentV = startVerticalOffset + (targetVerticalOffset - startVerticalOffset) * easedProgress;
 
+                    _isInternalZoomChange = true;
                     ZoomScale = currentScale;
+                    _isInternalZoomChange = false;
                     ScrollViewer.UpdateLayout(); 
                     ScrollViewer.ScrollToHorizontalOffset(currentH);
                     ScrollViewer.ScrollToVerticalOffset(currentV);
@@ -173,7 +295,9 @@ namespace DiagramFlow.Behaviors
             }
             else
             {
+                _isInternalZoomChange = true;
                 ZoomScale = targetScale;
+                _isInternalZoomChange = false;
                 ScrollViewer.UpdateLayout();
                 ScrollViewer.ScrollToHorizontalOffset(targetHorizontalOffset);
                 ScrollViewer.ScrollToVerticalOffset(targetVerticalOffset);
